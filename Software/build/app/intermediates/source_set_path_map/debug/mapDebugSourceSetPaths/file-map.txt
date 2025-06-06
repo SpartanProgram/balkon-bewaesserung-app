@@ -18,10 +18,10 @@ com.example.bewaesserung_mobile_app-jetified-lifecycle-process-2.7.0-16 /Users/z
 com.example.bewaesserung_mobile_app-jetified-lifecycle-livedata-core-ktx-2.7.0-17 /Users/zulfahminurvagala/.gradle/caches/8.10.2/transforms/ebeb29d7113d60e59d5e0acf92f847f3/transformed/jetified-lifecycle-livedata-core-ktx-2.7.0/res
 com.example.bewaesserung_mobile_app-jetified-annotation-experimental-1.4.0-18 /Users/zulfahminurvagala/.gradle/caches/8.10.2/transforms/f09a22cdd213028a38958888c7d16e20/transformed/jetified-annotation-experimental-1.4.0/res
 com.example.bewaesserung_mobile_app-core-runtime-2.2.0-19 /Users/zulfahminurvagala/.gradle/caches/8.10.2/transforms/ff849810dfe34a0ab790c402787c149e/transformed/core-runtime-2.2.0/res
-com.example.bewaesserung_mobile_app-debug-20 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/android/app/src/debug/res
-com.example.bewaesserung_mobile_app-main-21 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/android/app/src/main/res
-com.example.bewaesserung_mobile_app-pngs-22 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/build/app/generated/res/pngs/debug
-com.example.bewaesserung_mobile_app-resValues-23 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/build/app/generated/res/resValues/debug
-com.example.bewaesserung_mobile_app-packageDebugResources-24 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/build/app/intermediates/incremental/debug/packageDebugResources/merged.dir
-com.example.bewaesserung_mobile_app-packageDebugResources-25 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/build/app/intermediates/incremental/debug/packageDebugResources/stripped.dir
-com.example.bewaesserung_mobile_app-debug-26 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/build/app/intermediates/merged_res/debug/mergeDebugResources
+com.example.bewaesserung_mobile_app-debug-20 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/android/app/src/debug/res
+com.example.bewaesserung_mobile_app-main-21 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/android/app/src/main/res
+com.example.bewaesserung_mobile_app-pngs-22 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/generated/res/pngs/debug
+com.example.bewaesserung_mobile_app-resValues-23 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/generated/res/resValues/debug
+com.example.bewaesserung_mobile_app-packageDebugResources-24 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.example.bewaesserung_mobile_app-packageDebugResources-25 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.example.bewaesserung_mobile_app-debug-26 /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/intermediates/merged_res/debug/mergeDebugResources

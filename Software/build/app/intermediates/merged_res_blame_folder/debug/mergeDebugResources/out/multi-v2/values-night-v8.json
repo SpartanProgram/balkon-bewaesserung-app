@@ -4,7 +4,7 @@
             "outputFile": "com.example.bewaesserung_mobile_app-mergeDebugResources-24:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
-                    "source": "/Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/bewaesserung_mobile_app/android/app/src/main/res/values-night/styles.xml",
+                    "source": "/Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/android/app/src/main/res/values-night/styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",
