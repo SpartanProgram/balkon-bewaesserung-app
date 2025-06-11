@@ -127,6 +127,27 @@ class VerlaufScreen extends StatelessWidget {
             ),
           ),
           ...entries.map((entry) {
+            IconData icon;
+            Color iconColor;
+            String event = entry["event"]!.toLowerCase();
+
+            if (event.contains("bodenfeuchtigkeit")) {
+              icon = Icons.opacity;
+              iconColor = Colors.teal;
+            } else if (event.contains("wasserstand")) {
+              icon = Icons.water_drop;
+              iconColor = Colors.blue;
+            } else if (event.contains("bewässert")) {
+              icon = Icons.water;
+              iconColor = Colors.green;
+            } else if (event.contains("sensorfehler") || event.contains("fehler")) {
+              icon = Icons.error_outline;
+              iconColor = Colors.red;
+            } else {
+              icon = Icons.info_outline;
+              iconColor = Colors.grey;
+            }
+
             return Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               margin: const EdgeInsets.symmetric(vertical: 1),
@@ -144,6 +165,8 @@ class VerlaufScreen extends StatelessWidget {
                     style: const TextStyle(fontSize: 16),
                   ),
                   const SizedBox(width: 16),
+                  Icon(icon, size: 20, color: iconColor),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       entry["event"]!,
