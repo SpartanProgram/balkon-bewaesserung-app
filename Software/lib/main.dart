@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'verlauf_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -250,17 +252,18 @@ Widget _buildBlurOverlay() {
               });
             }),
             _drawerItem(context, 'Verlauf', Icons.history, () {
-                setState(() {
-                _drawerOpen = false;
-            });
+  setState(() {
+    _drawerOpen = false;
+  });
 
-          // Delay navigation until the drawer animation is complete
+          // Delay navigation until drawer closes
           Future.delayed(const Duration(milliseconds: 300), () {
-              Navigator.of(context).pushReplacement(
+              Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const VerlaufScreen()),
             );
           });
         }),
+
 
 
             _drawerItem(context, 'Zeitplan', Icons.schedule, () {}),
@@ -336,61 +339,4 @@ Widget _buildBlurOverlay() {
   }
 }
 
-class VerlaufScreen extends StatelessWidget {
-  const VerlaufScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFDFFFD7),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Verlauf',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: Wrap(
-            spacing: 24,
-            runSpacing: 24,
-            children: [
-              _dayButton("Mo", Colors.green.shade700),
-              _dayButton("Di", Colors.yellow),
-              _dayButton("Mi", Colors.green.shade700),
-              _dayButton("Do", Colors.green.shade700),
-              _dayButton("Fr", Colors.red),
-              _dayButton("Sa", Colors.green.shade700),
-              _dayButton("So", Colors.green.shade700),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _dayButton(String label, Color color) {
-    return Container(
-      width: 70,
-      height: 70,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
