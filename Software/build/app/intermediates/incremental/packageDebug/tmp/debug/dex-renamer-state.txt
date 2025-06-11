@@ -1,4 +1,4 @@
-#Fri Jun 06 09:49:42 CEST 2025
+#Fri Jun 06 14:40:55 CEST 2025
 base.0=/Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 base.1=/Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
 base.2=/Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/build/app/intermediates/dex/debug/mergeProjectDexDebug/1/classes.dex
