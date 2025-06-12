@@ -29,9 +29,31 @@ class VerlaufScreen extends StatelessWidget {
   Widget _dayButton(BuildContext context, String label, Color color) {
     return GestureDetector(
       onTap: () {
-        showDialog(
+        showGeneralDialog(
           context: context,
-          builder: (context) => _buildDetailPopup(context, label, color),
+          barrierDismissible: true,
+          barrierLabel: "Popup",
+          transitionDuration: const Duration(milliseconds: 350),
+          pageBuilder: (context, anim1, anim2) {
+            return _buildDetailPopup(context, label, color);
+          },
+          transitionBuilder: (context, anim1, anim2, child) {
+            final curved = CurvedAnimation(parent: anim1, curve: Curves.easeOut);
+
+            return Transform.scale(
+              scale: curved.value,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.15), // Slide up from 15% below
+                  end: Offset.zero,
+                ).animate(curved),
+                child: Opacity(
+                  opacity: anim1.value,
+                  child: child,
+                ),
+              ),
+            );
+          },
         );
       },
       child: Container(
@@ -55,81 +77,89 @@ class VerlaufScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailPopup(BuildContext context, String day, Color borderColor) {
-    final Map<String, String> dateTitles = {
-      "Mo": "Montag – 24. April",
-      "Di": "Dienstag – 25. April",
-      "Mi": "Mittwoch – 26. April",
-      "Do": "Donnerstag – 27. April",
-      "Fr": "Freitag – 28. April",
-      "Sa": "Samstag – 29. April",
-      "So": "Sonntag – 30. April",
-    };
+Widget _buildDetailPopup(BuildContext context, String day, Color borderColor) {
+  final Map<String, String> dateTitles = {
+    "Mo": "Montag – 24. April",
+    "Di": "Dienstag – 25. April",
+    "Mi": "Mittwoch – 26. April",
+    "Do": "Donnerstag – 27. April",
+    "Fr": "Freitag – 28. April",
+    "Sa": "Samstag – 29. April",
+    "So": "Sonntag – 30. April",
+  };
 
-    final Map<String, List<Map<String, String>>> dayEvents = {
-      "Mo": [
-        {"time": "06:00", "event": "Sensor 1: 40% Bodenfeuchtigkeit"},
-        {"time": "12:00", "event": "Automatisch bewässert (150 ml)"},
-      ],
-      "Di": [
-        {"time": "08:00", "event": "Sensor 1: 35% Bodenfeuchtigkeit"},
-        {"time": "10:30", "event": "Wasserstand niedrig"},
-        {"time": "13:00", "event": "Manuell bewässert (100 ml)"},
-      ],
-      "Mi": [
-        {"time": "07:00", "event": "Automatische Kontrolle"},
-        {"time": "18:00", "event": "Sensor 2: 60% Wasserstand"},
-      ],
-      "Do": [
-        {"time": "09:00", "event": "Sensor 3: 63% Wasserstand"},
-      ],
-      "Fr": [
-        {"time": "10:00", "event": "Notfallbewässerung (200 ml)"},
-        {"time": "12:30", "event": "Sensorfehler erkannt"},
-      ],
-      "Sa": [
-        {"time": "06:30", "event": "Sensor 3: 45% Bodenfeuchtigkeit"},
-        {"time": "11:00", "event": "Automatisch bewässert (100 ml)"},
-      ],
-      "So": [
-        {"time": "08:00", "event": "Wasserstand OK"},
-        {"time": "20:00", "event": "Sensoren schlafen"},
-      ],
-    };
+  final Map<String, List<Map<String, String>>> dayEvents = {
+    "Mo": [
+      {"time": "06:00", "event": "Sensor 1: 40% Bodenfeuchtigkeit"},
+      {"time": "12:00", "event": "Automatisch bewässert (150 ml)"},
+    ],
+    "Di": [
+      {"time": "08:00", "event": "Sensor 1: 35% Bodenfeuchtigkeit"},
+      {"time": "10:30", "event": "Wasserstand niedrig"},
+      {"time": "13:00", "event": "Manuell bewässert (100 ml)"},
+    ],
+    "Mi": [
+      {"time": "07:00", "event": "Automatische Kontrolle"},
+      {"time": "18:00", "event": "Sensor 2: 60% Wasserstand"},
+    ],
+    "Do": [
+      {"time": "09:00", "event": "Sensor 3: 63% Wasserstand"},
+    ],
+    "Fr": [
+      {"time": "10:00", "event": "Notfallbewässerung (200 ml)"},
+      {"time": "12:30", "event": "Sensorfehler erkannt"},
+    ],
+    "Sa": [
+      {"time": "06:30", "event": "Sensor 3: 45% Bodenfeuchtigkeit"},
+      {"time": "11:00", "event": "Automatisch bewässert (100 ml)"},
+    ],
+    "So": [
+      {"time": "08:00", "event": "Wasserstand OK"},
+      {"time": "20:00", "event": "Sensoren schlafen"},
+    ],
+  };
 
-    final List<Map<String, String>> entries = dayEvents[day] ?? [];
+  final entries = dayEvents[day] ?? [];
 
-    return Dialog(
-      backgroundColor: const Color(0xFFF7FDEB),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: borderColor, width: 2),
-      ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 100),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
-            child: Text(
-              dateTitles[day] ?? "Unbekannter Tag",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+  return Dialog(
+    backgroundColor: Colors.transparent,
+    insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 100),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7FDEB),
+          border: Border.all(color: borderColor, width: 2),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ),
-          ),
-          ...entries.map((entry) {
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                dateTitles[day] ?? "Unbekannter Tag",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ...entries.asMap().entries.map((entryWithIndex) {
+            final index = entryWithIndex.key;
+            final entry = entryWithIndex.value;
+            final isLast = index == entries.length - 1;
+
             IconData icon;
             Color iconColor;
-            String event = entry["event"]!.toLowerCase();
+            final event = entry["event"]!.toLowerCase();
 
             if (event.contains("bodenfeuchtigkeit")) {
               icon = Icons.opacity;
@@ -150,20 +180,16 @@ class VerlaufScreen extends StatelessWidget {
 
             return Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              margin: const EdgeInsets.symmetric(vertical: 1),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF7FDEB),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7FDEB),
                 border: Border(
-                  bottom: BorderSide(color: Colors.black12),
+                  bottom: isLast ? BorderSide.none : const BorderSide(color: Colors.black12),
                 ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    entry["time"]!,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  Text(entry["time"]!, style: const TextStyle(fontSize: 16)),
                   const SizedBox(width: 16),
                   Icon(icon, size: 20, color: iconColor),
                   const SizedBox(width: 12),
@@ -176,10 +202,12 @@ class VerlaufScreen extends StatelessWidget {
                 ],
               ),
             );
-          }),
-          const SizedBox(height: 12),
-        ],
+          }).toList(),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
