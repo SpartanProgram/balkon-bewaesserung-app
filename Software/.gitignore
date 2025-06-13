@@ -1,0 +1,24 @@
+# Dart/Pub
+.dart_tool/
+.packages
+.pub-cache/
+build/
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Others
+*.log
+*.lock
+*.tmp

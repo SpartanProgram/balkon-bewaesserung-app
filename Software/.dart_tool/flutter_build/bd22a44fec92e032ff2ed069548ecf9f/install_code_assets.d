@@ -1,1 +1,0 @@
- /Users/zulfahminurvagala/Git/5-balkonbewaesserung/Software/.dart_tool/flutter_build/bd22a44fec92e032ff2ed069548ecf9f/native_assets.json: 
