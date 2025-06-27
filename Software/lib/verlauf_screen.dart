@@ -8,19 +8,25 @@ class VerlaufScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final weekdayLabels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+
+    // Liste der letzten 7 Tage (beginnend mit heute)
+    final List<DateTime> last7Days = List.generate(
+      7,
+      (i) => now.subtract(Duration(days: i)),
+    ).reversed.toList(); // Älteste zuerst → Heute zuletzt
+
     return CustomScaffold(
       title: 'Verlauf',
-            body: Column(
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
             child: Text(
               "🕓 Verlauf der letzten 7 Tage",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
@@ -30,15 +36,18 @@ class VerlaufScreen extends StatelessWidget {
                 alignment: WrapAlignment.center,
                 spacing: 24,
                 runSpacing: 24,
-                children: [
-                  _dayButton(context, "Mo", Colors.green.shade700),
-                  _dayButton(context, "Di", Colors.yellow),
-                  _dayButton(context, "Mi", Colors.green.shade700),
-                  _dayButton(context, "Do", Colors.green.shade700),
-                  _dayButton(context, "Fr", Colors.red),
-                  _dayButton(context, "Sa", Colors.green.shade700),
-                  _dayButton(context, "So", Colors.green.shade700),
-                ],
+                children: last7Days.map((date) {
+                  final label = weekdayLabels[date.weekday - 1];
+                  final isToday = date.day == now.day &&
+                      date.month == now.month &&
+                      date.year == now.year;
+
+                  final Color dayColor = isToday
+                      ? Colors.orange
+                      : Colors.green.shade700;
+
+                  return _dayButton(context, label, date, dayColor, isToday);
+                }).toList(),
               ),
             ),
           ),
@@ -47,98 +56,49 @@ class VerlaufScreen extends StatelessWidget {
     );
   }
 
-Widget _dayButton(BuildContext context, String label, Color color) {
-  final now = DateTime.now();
-  final weekdayMap = {
-    1: "Mo",
-    2: "Di",
-    3: "Mi",
-    4: "Do",
-    5: "Fr",
-    6: "Sa",
-    7: "So",
-  };
-
-  final currentDayLabel = weekdayMap[now.weekday];
-
-  return _AnimatedDayBox(
-    label: label,
-    color: color,
-    isToday: label == currentDayLabel, // ✅ HERVORHEBEN!
-    onTap: () {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) {
-          return Stack(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-                  child: Container(
-                    color: Colors.black.withOpacity(0.3),
-                    width: double.infinity,
-                    height: double.infinity,
+  Widget _dayButton(BuildContext context, String label, DateTime date, Color color, bool isToday) {
+    return _AnimatedDayBox(
+      label: label,
+      color: color,
+      isToday: isToday,
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) {
+            return Stack(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                    child: Container(
+                      color: Colors.black.withOpacity(0.3),
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
                   ),
                 ),
-              ),
-              _buildDetailPopup(context, label, color),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+                _buildDetailPopup(context, date, color),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
-  Widget _buildDetailPopup(BuildContext context, String day, Color borderColor) {
-    final Map<String, String> dateTitles = {
-      "Mo": "Montag – 24. April",
-      "Di": "Dienstag – 25. April",
-      "Mi": "Mittwoch – 26. April",
-      "Do": "Donnerstag – 27. April",
-      "Fr": "Freitag – 28. April",
-      "Sa": "Samstag – 29. April",
-      "So": "Sonntag – 30. April",
-    };
+  Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor) {
+    final String formattedDate =
+        "${_weekdayLong(date.weekday)} – ${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}";
 
-    final Map<String, List<Map<String, String>>> dayEvents = {
-      "Mo": [
-        {"time": "06:00", "event": "Sensor 1: 40% Bodenfeuchtigkeit"},
-        {"time": "12:00", "event": "Automatisch bewässert (150 ml)"},
-      ],
-      "Di": [
-        {"time": "08:00", "event": "Sensor 1: 35% Bodenfeuchtigkeit"},
-        {"time": "10:30", "event": "Wasserstand niedrig"},
-        {"time": "13:00", "event": "Manuell bewässert (100 ml)"},
-      ],
-      "Mi": [
-        {"time": "07:00", "event": "Automatische Kontrolle"},
-        {"time": "18:00", "event": "Sensor 2: 60% Wasserstand"},
-      ],
-      "Do": [
-        {"time": "09:00", "event": "Sensor 3: 63% Wasserstand"},
-      ],
-      "Fr": [
-        {"time": "06:00", "event": "20% Bodenfeuchtigkeit"},
-        {"time": "10:00", "event": "10% Wasserstand"},
-        {"time": "12:30", "event": "Automatisch bewässert (100 ml)"},
-        {"time": "20:00", "event": "Manuell bewässert (150 ml)"},
-        {"time": "22:00", "event": "Sensorfehler erkannt"},
-      ],
-      "Sa": [
-        {"time": "06:30", "event": "Sensor 3: 45% Bodenfeuchtigkeit"},
-        {"time": "11:00", "event": "Automatisch bewässert (100 ml)"},
-      ],
-      "So": [
-        {"time": "08:00", "event": "Wasserstand OK"},
-        {"time": "20:00", "event": "Sensoren schlafen"},
-      ],
-    };
-
-    final entries = dayEvents[day] ?? [];
+    final entries = [
+      {"time": "08:00", "event": "Sensor 1: ${40 + date.day % 10}% Bodenfeuchtigkeit"},
+      {"time": "12:00", "event": "Automatisch bewässert (${100 + date.day % 50} ml)"},
+      if (date.weekday == DateTime.friday)
+        {"time": "18:00", "event": "Sensorfehler erkannt"},
+    ];
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
@@ -163,11 +123,8 @@ Widget _dayButton(BuildContext context, String label, Color color) {
                 ),
               ),
               Text(
-                dateTitles[day] ?? "Unbekannter Tag",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                formattedDate,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -199,7 +156,6 @@ Widget _dayButton(BuildContext context, String label, Color color) {
                       iconColor = Colors.grey;
                     }
 
-                    // Animation
                     return TweenAnimationBuilder<double>(
                       duration: Duration(milliseconds: 300 + index * 70),
                       tween: Tween(begin: 0.0, end: 1.0),
@@ -214,7 +170,6 @@ Widget _dayButton(BuildContext context, String label, Color color) {
                       },
                       child: Stack(
                         children: [
-                          // Vertical line
                           Positioned(
                             left: 22,
                             top: 0,
@@ -224,7 +179,6 @@ Widget _dayButton(BuildContext context, String label, Color color) {
                               color: isLast ? Colors.transparent : Colors.black26,
                             ),
                           ),
-                          // Event box
                           Container(
                             margin: const EdgeInsets.symmetric(vertical: 10),
                             padding: const EdgeInsets.only(left: 48, right: 12),
@@ -243,7 +197,6 @@ Widget _dayButton(BuildContext context, String label, Color color) {
                               ],
                             ),
                           ),
-                          // Dot indicator
                           Positioned(
                             left: 16,
                             top: 14,
@@ -264,19 +217,40 @@ Widget _dayButton(BuildContext context, String label, Color color) {
       },
     );
   }
+
+  String _weekdayLong(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return "Montag";
+      case DateTime.tuesday:
+        return "Dienstag";
+      case DateTime.wednesday:
+        return "Mittwoch";
+      case DateTime.thursday:
+        return "Donnerstag";
+      case DateTime.friday:
+        return "Freitag";
+      case DateTime.saturday:
+        return "Samstag";
+      case DateTime.sunday:
+        return "Sonntag";
+      default:
+        return "";
+    }
+  }
 }
 
 class _AnimatedDayBox extends StatefulWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  final bool isToday; // ⬅️ NEU
+  final bool isToday;
 
   const _AnimatedDayBox({
     required this.label,
     required this.color,
     required this.onTap,
-    this.isToday = false, // ⬅️ Standard false
+    this.isToday = false,
   });
 
   @override
@@ -300,7 +274,6 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
       begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
     _controller.forward();
   }
 
@@ -337,10 +310,10 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
               boxShadow: widget.isToday
                   ? [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.6),
-                        blurRadius: 12,
+                        color: Colors.orange.withOpacity(0.5),
+                        blurRadius: 10,
                         spreadRadius: 1.5,
-                      )
+                      ),
                     ]
                   : [],
               border: widget.isToday
