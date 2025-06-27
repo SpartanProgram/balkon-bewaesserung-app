@@ -187,47 +187,61 @@ class VerlaufScreen extends StatelessWidget {
                       iconColor = Colors.grey;
                     }
 
-                    return Stack(
-                      children: [
-                        // Vertical line
-                        Positioned(
-                          left: 22,
-                          top: 0,
-                          bottom: isLast ? 8 : 0,
-                          child: Container(
-                            width: 2,
-                            color: isLast ? Colors.transparent : Colors.black26,
+                    // Animation
+                    return TweenAnimationBuilder<double>(
+                      duration: Duration(milliseconds: 300 + index * 70),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      builder: (context, value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, (1 - value) * 20),
+                            child: child,
                           ),
-                        ),
-                        // Event box
-                        Container(
-                          margin: const EdgeInsets.symmetric(vertical: 10),
-                          padding: const EdgeInsets.only(left: 48, right: 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(entry["time"]!,
-                                  style: const TextStyle(fontSize: 16)),
-                              const SizedBox(width: 12),
-                              Icon(icon, size: 20, color: iconColor),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(entry["event"]!,
+                        );
+                      },
+                      child: Stack(
+                        children: [
+                          // Vertical line
+                          Positioned(
+                            left: 22,
+                            top: 0,
+                            bottom: isLast ? 8 : 0,
+                            child: Container(
+                              width: 2,
+                              color: isLast ? Colors.transparent : Colors.black26,
+                            ),
+                          ),
+                          // Event box
+                          Container(
+                            margin: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.only(left: 48, right: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(entry["time"]!,
                                     style: const TextStyle(fontSize: 16)),
-                              ),
-                            ],
+                                const SizedBox(width: 12),
+                                Icon(icon, size: 20, color: iconColor),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(entry["event"]!,
+                                      style: const TextStyle(fontSize: 16)),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        // Dot indicator
-                        Positioned(
-                          left: 16,
-                          top: 14,
-                          child: CircleAvatar(
-                            radius: 6,
-                            backgroundColor: iconColor,
+                          // Dot indicator
+                          Positioned(
+                            left: 16,
+                            top: 14,
+                            child: CircleAvatar(
+                              radius: 6,
+                              backgroundColor: iconColor,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),
