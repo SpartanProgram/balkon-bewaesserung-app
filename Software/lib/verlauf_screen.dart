@@ -10,20 +10,39 @@ class VerlaufScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScaffold(
       title: 'Verlauf',
-      body: Center(
-        child: Wrap(
-          spacing: 24,
-          runSpacing: 24,
-          children: [
-            _dayButton(context, "Mo", Colors.green.shade700),
-            _dayButton(context, "Di", Colors.yellow),
-            _dayButton(context, "Mi", Colors.green.shade700),
-            _dayButton(context, "Do", Colors.green.shade700),
-            _dayButton(context, "Fr", Colors.red),
-            _dayButton(context, "Sa", Colors.green.shade700),
-            _dayButton(context, "So", Colors.green.shade700),
-          ],
-        ),
+            body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Text(
+              "🕓 Verlauf der letzten 7 Tage",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 24,
+                runSpacing: 24,
+                children: [
+                  _dayButton(context, "Mo", Colors.green.shade700),
+                  _dayButton(context, "Di", Colors.yellow),
+                  _dayButton(context, "Mi", Colors.green.shade700),
+                  _dayButton(context, "Do", Colors.green.shade700),
+                  _dayButton(context, "Fr", Colors.red),
+                  _dayButton(context, "Sa", Colors.green.shade700),
+                  _dayButton(context, "So", Colors.green.shade700),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
