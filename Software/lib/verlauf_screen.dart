@@ -47,39 +47,51 @@ class VerlaufScreen extends StatelessWidget {
     );
   }
 
-  Widget _dayButton(BuildContext context, String label, Color color) {
-    return _AnimatedDayBox(
-      label: label,
-      color: color,
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) {
-            return Stack(
-              children: [
-                // Blurred background
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.3),
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
+Widget _dayButton(BuildContext context, String label, Color color) {
+  final now = DateTime.now();
+  final weekdayMap = {
+    1: "Mo",
+    2: "Di",
+    3: "Mi",
+    4: "Do",
+    5: "Fr",
+    6: "Sa",
+    7: "So",
+  };
+
+  final currentDayLabel = weekdayMap[now.weekday];
+
+  return _AnimatedDayBox(
+    label: label,
+    color: color,
+    isToday: label == currentDayLabel, // ✅ HERVORHEBEN!
+    onTap: () {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) {
+          return Stack(
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.3),
+                    width: double.infinity,
+                    height: double.infinity,
                   ),
                 ),
-                // Sliding bottom popup
-                _buildDetailPopup(context, label, color),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
+              ),
+              _buildDetailPopup(context, label, color),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
 
   Widget _buildDetailPopup(BuildContext context, String day, Color borderColor) {
     final Map<String, String> dateTitles = {
@@ -258,11 +270,13 @@ class _AnimatedDayBox extends StatefulWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
+  final bool isToday; // ⬅️ NEU
 
   const _AnimatedDayBox({
     required this.label,
     required this.color,
     required this.onTap,
+    this.isToday = false, // ⬅️ Standard false
   });
 
   @override
@@ -283,11 +297,11 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
       duration: const Duration(milliseconds: 250),
     );
     _offsetAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2), // Start weiter unten
+      begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    _controller.forward(); // Animation beim Erscheinen starten
+    _controller.forward();
   }
 
   @override
@@ -297,13 +311,11 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
   }
 
   void _handleTap() async {
-    HapticFeedback.lightImpact(); // Haptisches Feedback
-
+    HapticFeedback.lightImpact();
     setState(() => _opacity = 0.3);
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() => _opacity = 1.0);
     await Future.delayed(const Duration(milliseconds: 100));
-
     widget.onTap();
   }
 
@@ -322,6 +334,18 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
             decoration: BoxDecoration(
               color: widget.color,
               borderRadius: BorderRadius.circular(16),
+              boxShadow: widget.isToday
+                  ? [
+                      BoxShadow(
+                        color: Colors.green.withOpacity(0.6),
+                        blurRadius: 12,
+                        spreadRadius: 1.5,
+                      )
+                    ]
+                  : [],
+              border: widget.isToday
+                  ? Border.all(color: Colors.white, width: 2)
+                  : null,
             ),
             child: Center(
               child: Text(
