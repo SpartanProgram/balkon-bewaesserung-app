@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'widgets/custom_scaffold.dart';
+import 'dart:ui';
+
 
 class VerlaufScreen extends StatelessWidget {
   const VerlaufScreen({super.key});
@@ -34,10 +36,29 @@ class VerlaufScreen extends StatelessWidget {
 
         showModalBottomSheet(
           context: context,
-          backgroundColor: Colors.transparent,
           isScrollControlled: true,
-          builder: (_) => _buildDetailPopup(context, label, color),
+          backgroundColor: Colors.transparent,
+          builder: (context) {
+            return Stack(
+              children: [
+                // Blur background
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
+                ),
+                // Sliding popup
+                _buildDetailPopup(context, label, color),
+              ],
+            );
+          },
         );
+
       },
       child: Container(
         width: 70,
