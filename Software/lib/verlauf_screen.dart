@@ -159,13 +159,12 @@ class VerlaufScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: ListView.separated(
+                child: ListView.builder(
                   controller: scrollController,
                   itemCount: entries.length,
-                  separatorBuilder: (_, __) =>
-                      const Divider(height: 0, color: Colors.black12),
-                  itemBuilder: (_, index) {
+                  itemBuilder: (context, index) {
                     final entry = entries[index];
+                    final isLast = index == entries.length - 1;
                     final event = entry["event"]!.toLowerCase();
 
                     IconData icon;
@@ -180,8 +179,7 @@ class VerlaufScreen extends StatelessWidget {
                     } else if (event.contains("bewässert")) {
                       icon = Icons.water;
                       iconColor = Colors.green;
-                    } else if (event.contains("sensorfehler") ||
-                        event.contains("fehler")) {
+                    } else if (event.contains("sensorfehler") || event.contains("fehler")) {
                       icon = Icons.error_outline;
                       iconColor = Colors.red;
                     } else {
@@ -189,19 +187,47 @@ class VerlaufScreen extends StatelessWidget {
                       iconColor = Colors.grey;
                     }
 
-                    return ListTile(
-                      leading: Text(entry["time"]!,
-                          style: const TextStyle(fontSize: 16)),
-                      title: Row(
-                        children: [
-                          Icon(icon, size: 20, color: iconColor),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(entry["event"]!,
-                                style: const TextStyle(fontSize: 16)),
+                    return Stack(
+                      children: [
+                        // Vertical line
+                        Positioned(
+                          left: 22,
+                          top: 0,
+                          bottom: isLast ? 8 : 0,
+                          child: Container(
+                            width: 2,
+                            color: isLast ? Colors.transparent : Colors.black26,
                           ),
-                        ],
-                      ),
+                        ),
+                        // Event box
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.only(left: 48, right: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(entry["time"]!,
+                                  style: const TextStyle(fontSize: 16)),
+                              const SizedBox(width: 12),
+                              Icon(icon, size: 20, color: iconColor),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(entry["event"]!,
+                                    style: const TextStyle(fontSize: 16)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Dot indicator
+                        Positioned(
+                          left: 16,
+                          top: 14,
+                          child: CircleAvatar(
+                            radius: 6,
+                            backgroundColor: iconColor,
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
