@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'widgets/custom_scaffold.dart';
 import 'dart:ui';
-
+import 'widgets/custom_scaffold.dart';
 
 class VerlaufScreen extends StatelessWidget {
   const VerlaufScreen({super.key});
@@ -29,55 +28,36 @@ class VerlaufScreen extends StatelessWidget {
   }
 
   Widget _dayButton(BuildContext context, String label, Color color) {
-    return GestureDetector(
-      onTap: () async {
-        // Optional: simulate tap effect (can be animated)
-        await Future.delayed(const Duration(milliseconds: 100));
-
+    return _AnimatedDayBox(
+      label: label,
+      color: color,
+      onTap: () {
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) {
+          builder: (_) {
             return Stack(
               children: [
-                // Blur background
+                // Blurred background
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
                     child: Container(
+                      color: Colors.black.withOpacity(0.3),
                       width: double.infinity,
                       height: double.infinity,
                     ),
                   ),
                 ),
-                // Sliding popup
+                // Sliding bottom popup
                 _buildDetailPopup(context, label, color),
               ],
             );
           },
         );
-
       },
-      child: Container(
-        width: 70,
-        height: 70,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -162,7 +142,8 @@ class VerlaufScreen extends StatelessWidget {
                 child: ListView.separated(
                   controller: scrollController,
                   itemCount: entries.length,
-                  separatorBuilder: (_, __) => const Divider(height: 0, color: Colors.black12),
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 0, color: Colors.black12),
                   itemBuilder: (_, index) {
                     final entry = entries[index];
                     final event = entry["event"]!.toLowerCase();
@@ -179,7 +160,8 @@ class VerlaufScreen extends StatelessWidget {
                     } else if (event.contains("bewässert")) {
                       icon = Icons.water;
                       iconColor = Colors.green;
-                    } else if (event.contains("sensorfehler") || event.contains("fehler")) {
+                    } else if (event.contains("sensorfehler") ||
+                        event.contains("fehler")) {
                       icon = Icons.error_outline;
                       iconColor = Colors.red;
                     } else {
@@ -188,13 +170,15 @@ class VerlaufScreen extends StatelessWidget {
                     }
 
                     return ListTile(
-                      leading: Text(entry["time"]!, style: const TextStyle(fontSize: 16)),
+                      leading: Text(entry["time"]!,
+                          style: const TextStyle(fontSize: 16)),
                       title: Row(
                         children: [
                           Icon(icon, size: 20, color: iconColor),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(entry["event"]!, style: const TextStyle(fontSize: 16)),
+                            child: Text(entry["event"]!,
+                                style: const TextStyle(fontSize: 16)),
                           ),
                         ],
                       ),
@@ -206,6 +190,62 @@ class VerlaufScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _AnimatedDayBox extends StatefulWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _AnimatedDayBox({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedDayBox> createState() => _AnimatedDayBoxState();
+}
+
+class _AnimatedDayBoxState extends State<_AnimatedDayBox> {
+  double _opacity = 1.0;
+
+  void _handleTap() async {
+    setState(() => _opacity = 0.3);
+    await Future.delayed(const Duration(milliseconds: 100));
+    setState(() => _opacity = 1.0);
+    await Future.delayed(const Duration(milliseconds: 100));
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 150),
+        opacity: _opacity,
+        child: Container(
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            color: widget.color,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: Text(
+              widget.label,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
