@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'widgets/custom_scaffold.dart';
+import 'package:flutter/services.dart';
 
 class VerlaufScreen extends StatelessWidget {
   const VerlaufScreen({super.key});
@@ -209,38 +210,68 @@ class _AnimatedDayBox extends StatefulWidget {
   State<_AnimatedDayBox> createState() => _AnimatedDayBoxState();
 }
 
-class _AnimatedDayBoxState extends State<_AnimatedDayBox> {
+class _AnimatedDayBoxState extends State<_AnimatedDayBox>
+    with SingleTickerProviderStateMixin {
   double _opacity = 1.0;
+  late final AnimationController _controller;
+  late final Animation<Offset> _offsetAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _offsetAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2), // Start weiter unten
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.forward(); // Animation beim Erscheinen starten
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   void _handleTap() async {
+    HapticFeedback.lightImpact(); // Haptisches Feedback
+
     setState(() => _opacity = 0.3);
     await Future.delayed(const Duration(milliseconds: 100));
     setState(() => _opacity = 1.0);
     await Future.delayed(const Duration(milliseconds: 100));
+
     widget.onTap();
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _handleTap,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 150),
-        opacity: _opacity,
-        child: Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            color: widget.color,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Center(
-            child: Text(
-              widget.label,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+    return SlideTransition(
+      position: _offsetAnimation,
+      child: GestureDetector(
+        onTap: _handleTap,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 150),
+          opacity: _opacity,
+          child: Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: widget.color,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(
+                widget.label,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
