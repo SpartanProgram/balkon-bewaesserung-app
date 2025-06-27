@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../verlauf_screen.dart';
 import '../zeitplan.dart';
+import '../einstellungen.dart';
+
 
 class CustomScaffold extends StatefulWidget {
   final String title;
@@ -124,21 +126,33 @@ class _CustomScaffoldState extends State<CustomScaffold> {
               ),
               const SizedBox(height: 10),
               _drawerItem(context, 'Hauptmenü', Icons.home, () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                );
+                if (widget.title != 'Hauptmenü') {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                }
               }),
               _drawerItem(context, 'Verlauf', Icons.history, () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const VerlaufScreen()),
-                );
+                if (widget.title != 'Verlauf') {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const VerlaufScreen()),
+                  );
+                }
               }),
               _drawerItem(context, 'Zeitplan', Icons.schedule, () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const ZeitplanScreen()),
-                );
+               if (widget.title != 'Zeitplan') {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const ZeitplanScreen()),
+                  );
+                }
               }),
-              _drawerItem(context, 'Einstellungen', Icons.settings, () {}),
+              _drawerItem(context, 'Einstellungen', Icons.settings, () {
+                if (widget.title != 'Einstellungen') {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const EinstellungenScreen()),
+                  );
+                }
+              }),
             ],
           ),
         ),
