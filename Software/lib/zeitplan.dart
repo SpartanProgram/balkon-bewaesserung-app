@@ -14,80 +14,111 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
   bool isActivated = true;
   TimeOfDay selectedTime = const TimeOfDay(hour: 8, minute: 0);
 
-  void _showCustomTimePicker() {
+  void _showStyledTimePicker() {
     int hour = selectedTime.hour;
     int minute = selectedTime.minute;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SizedBox(
-          height: 300,
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              const Text("Zeit wählen", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const Divider(),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Hour picker
-                    Expanded(
-                      child: CupertinoPicker(
-                        scrollController: FixedExtentScrollController(initialItem: hour),
-                        itemExtent: 40,
-                        onSelectedItemChanged: (value) {
-                          HapticFeedback.selectionClick();
-                          hour = value;
-                        },
-                        children: List.generate(24, (index) => Center(child: Text(index.toString().padLeft(2, '0')))),
-                      ),
-                    ),
-                    const Text(":", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    // Minute picker
-                    Expanded(
-                      child: CupertinoPicker(
-                        scrollController: FixedExtentScrollController(initialItem: minute),
-                        itemExtent: 40,
-                        onSelectedItemChanged: (value) {
-                          HapticFeedback.selectionClick();
-                          minute = value;
-                        },
-                        children: List.generate(60, (index) => Center(child: Text(index.toString().padLeft(2, '0')))),
-                      ),
-                    ),
-                  ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Container(
+            height: 340,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF7FDEB),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                const Text(
+                  "⏰ Uhrzeit wählen",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      child: const Text("Abbrechen"),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    ElevatedButton(
-                      child: const Text("Fertig"),
-                      onPressed: () {
-                        setState(() {
-                          selectedTime = TimeOfDay(hour: hour, minute: minute);
-                        });
-                        HapticFeedback.lightImpact();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Hour picker
+                      Expanded(
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: hour),
+                          itemExtent: 40,
+                          useMagnifier: true,
+                          onSelectedItemChanged: (value) {
+                            HapticFeedback.selectionClick();
+                            hour = value;
+                          },
+                          children: List.generate(24,
+                            (index) => Center(
+                              child: Text(
+                                index.toString().padLeft(2, '0'),
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Text(":", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                      // Minute picker
+                      Expanded(
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: minute),
+                          itemExtent: 40,
+                          useMagnifier: true,
+                          onSelectedItemChanged: (value) {
+                            HapticFeedback.selectionClick();
+                            minute = value;
+                          },
+                          children: List.generate(60,
+                            (index) => Center(
+                              child: Text(
+                                index.toString().padLeft(2, '0'),
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        child: const Text("Abbrechen", style: TextStyle(fontSize: 16)),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            selectedTime = TimeOfDay(hour: hour, minute: minute);
+                          });
+                          HapticFeedback.lightImpact();
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Fertig", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -123,7 +154,7 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
                   activeColor: Colors.white,
                   activeTrackColor: Colors.green,
                   onChanged: (value) {
-                    HapticFeedback.lightImpact(); // Haptic on toggle
+                    HapticFeedback.lightImpact();
                     setState(() {
                       isActivated = value;
                     });
@@ -137,7 +168,7 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
 
           // Time Picker Box
           GestureDetector(
-            onTap: _showCustomTimePicker,
+            onTap: _showStyledTimePicker,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 24),
