@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'widgets/custom_scaffold.dart';
 import 'package:flutter/services.dart';
+import 'package:mqtt_client/mqtt_client.dart';
+import 'package:mqtt_client/mqtt_server_client.dart';
+
 
 class EinstellungenScreen extends StatefulWidget {
   const EinstellungenScreen({super.key});
@@ -10,6 +13,24 @@ class EinstellungenScreen extends StatefulWidget {
 }
 
 class _EinstellungenScreenState extends State<EinstellungenScreen> {
+
+  void _publishMessage(String topic, String message) {
+  if (_mqttClient == null || _mqttClient!.connectionStatus!.state != MqttConnectionState.connected) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Nicht verbunden. Bitte zuerst verbinden.")),
+    );
+    return;
+  }
+
+  final builder = MqttClientPayloadBuilder();
+  builder.addString(message);
+
+  _mqttClient!.publishMessage(topic, MqttQos.atMostOnce, builder.payload!);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text("Gesendet: $message")),
+  );
+}
   bool _benachrichtigungenAktiv = true;
   bool _useTLS = false;
 
@@ -18,24 +39,81 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _connectToBroker() {
-    final broker = _brokerController.text.trim();
-    final port = int.tryParse(_portController.text.trim());
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text.trim();
+  MqttServerClient? _mqttClient;
 
-    if (broker.isEmpty || port == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Bitte Broker-Adresse und Port angeben")),
-      );
-      return;
-    }
+  Future<void> _connectToBroker() async {
+  final broker = _brokerController.text.trim();
+  final port = int.tryParse(_portController.text.trim()) ?? 1883;
+  final username = _usernameController.text.trim();
+  final password = _passwordController.text.trim();
 
-    // TODO: Replace with real connection logic
+  if (broker.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Verbinde mit $broker:$port...")),
+      const SnackBar(content: Text("Bitte Broker-Adresse eingeben")),
     );
+    return;
   }
+
+  _mqttClient = MqttServerClient(broker, 'flutter_client_${DateTime.now().millisecondsSinceEpoch}');
+  _mqttClient!.port = port;
+  _mqttClient!.logging(on: false);
+  _mqttClient!.useWebSocket = false;
+  _mqttClient!.secure = _useTLS;
+  _mqttClient!.keepAlivePeriod = 20;
+  _mqttClient!.onDisconnected = _onDisconnected;
+
+  final connMessage = MqttConnectMessage()
+      .withClientIdentifier('flutter_client')
+      .startClean()
+      .withWillQos(MqttQos.atMostOnce);
+  _mqttClient!.connectionMessage = connMessage;
+
+  try {
+    await _mqttClient!.connect(
+      username.isNotEmpty ? username : null,
+      password.isNotEmpty ? password : null,
+    );
+  } catch (e) {
+    _mqttClient!.disconnect();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Verbindung fehlgeschlagen: $e")),
+    );
+    return;
+  }
+
+  if (_mqttClient!.connectionStatus!.state == MqttConnectionState.connected) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Erfolgreich verbunden!")),
+    );
+
+    // Subscribe to test topic
+    const testTopic = 'sensor/data';
+    _mqttClient!.subscribe(testTopic, MqttQos.atMostOnce);
+
+    _mqttClient!.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
+      final recMess = c[0].payload as MqttPublishMessage;
+      final payload =
+          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+
+      debugPrint('Nachricht von ${c[0].topic}: $payload');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Empfangen: $payload")),
+      );
+    });
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Verbindung fehlgeschlagen: ${_mqttClient!.connectionStatus!.state}"),
+      ),
+    );
+    _mqttClient!.disconnect();
+  }
+}
+
+void _onDisconnected() {
+  debugPrint("MQTT Verbindung getrennt.");
+}
+
 
   @override
   Widget build(BuildContext context) {
