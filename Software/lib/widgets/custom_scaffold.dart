@@ -178,6 +178,7 @@ class _CustomScaffoldState extends State<CustomScaffold> {
           splashColor: Colors.green.withOpacity(0.3),
           highlightColor: Colors.green.withOpacity(0.1),
           onTap: () {
+            HapticFeedback.lightImpact();
             setState(() => _drawerOpen = false);
             Future.delayed(const Duration(milliseconds: 300), onTap);
           },

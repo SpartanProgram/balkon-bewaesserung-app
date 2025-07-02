@@ -156,7 +156,7 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
                   activeColor: Colors.white,
                   activeTrackColor: Colors.green,
                   onChanged: (value) {
-                    HapticFeedback.lightImpact();
+                    HapticFeedback.mediumImpact();
                     setState(() {
                       isActivated = value;
                     });
