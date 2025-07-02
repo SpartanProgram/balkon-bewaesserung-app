@@ -1,24 +1,75 @@
-# Dart/Pub
+# Flutter/Dart
 .dart_tool/
 .packages
 .pub-cache/
-build/
-
-# Flutter
 .flutter-plugins
 .flutter-plugins-dependencies
+.buildlog/
 .melos_tool/
-
-# IDEs
-.vscode/
 .idea/
-*.iml
+.metadata
 
-# OS-specific
-.DS_Store
-Thumbs.db
+# Build outputs
+build/
+**/build/
+.flutter-*
+generated_plugin_registrant.dart
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# macOS
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/.symlinks/
+macos/Runner.xcworkspace/
+macos/Runner.xcodeproj/project.xcworkspace/
+macos/Runner.xcodeproj/xcuserdata/
+macos/Runner.xcworkspace/xcuserdata/
+
+# Xcode
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/*.pbxuser
+
+# iOS
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Pods/
+ios/.symlinks/
+ios/.flutter-plugins
+ios/.flutter-plugins-dependencies
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+
+# Android
+android/.gradle/
+android/.idea/
+android/.settings/
+android/local.properties
+android/.gradle/
+android/build/
+**/android/key.properties
+
+# JetBrains/IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Logs
+*.log
 
 # Others
-*.log
-*.lock
+.env
+*.bak
 *.tmp
+*.swp
+
+# System
+.DS_Store
+Thumbs.db
