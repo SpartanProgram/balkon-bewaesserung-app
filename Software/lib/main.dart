@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'widgets/custom_scaffold.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -144,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               onPressed: () {
+                HapticFeedback.heavyImpact();
                 // Trigger watering here
               },
               child: const Text(
