@@ -106,7 +106,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onPressed: () {
                 HapticFeedback.heavyImpact();
-                // Trigger watering here
+
+                final mqtt = context.read<SensorDataProvider>();
+                mqtt.triggerWatering();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("🚿 Bewässerung gestartet")),
+                );
               },
               child: const Text(
                 'Jetzt bewässern',

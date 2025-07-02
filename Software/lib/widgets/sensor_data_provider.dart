@@ -38,6 +38,13 @@ class SensorDataProvider extends ChangeNotifier {
     );
   }
 
+  void triggerWatering() {
+    const topic = 'esp32/watering';
+    const message = 'start';
+
+    mqtt.publish(topic, message);
+  }
+
   void updateSensorFromJson(String jsonString) {
     try {
       final data = Map<String, dynamic>.from(json.decode(jsonString));
