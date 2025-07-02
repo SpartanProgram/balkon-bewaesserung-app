@@ -3,6 +3,10 @@ import 'widgets/custom_scaffold.dart';
 import 'package:flutter/services.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'widgets/sensor_data_provider.dart';
+import 'package:provider/provider.dart';
+
+
 
 
 class EinstellungenScreen extends StatefulWidget {
@@ -92,8 +96,11 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
 
     _mqttClient!.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
       final recMess = c[0].payload as MqttPublishMessage;
-      final payload =
-          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+      final payload = MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+
+      debugPrint("📥 MQTT Nachricht erhalten: $payload");
+      
+      context.read<SensorDataProvider>().updateSensorFromJson(payload);
 
       debugPrint('Nachricht von ${c[0].topic}: $payload');
       ScaffoldMessenger.of(context).showSnackBar(
