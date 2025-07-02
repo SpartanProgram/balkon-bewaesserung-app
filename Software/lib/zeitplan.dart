@@ -49,6 +49,7 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
                           scrollController: FixedExtentScrollController(initialItem: hour),
                           itemExtent: 40,
                           useMagnifier: true,
+                          looping: true,
                           onSelectedItemChanged: (value) {
                             HapticFeedback.selectionClick();
                             hour = value;
@@ -70,6 +71,7 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
                           scrollController: FixedExtentScrollController(initialItem: minute),
                           itemExtent: 40,
                           useMagnifier: true,
+                          looping: true,
                           onSelectedItemChanged: (value) {
                             HapticFeedback.selectionClick();
                             minute = value;
