@@ -15,12 +15,12 @@ class VerlaufScreen extends StatelessWidget {
     final List<DateTime> last7Days = List.generate(
       7,
       (i) => now.subtract(Duration(days: i)),
-    ).reversed.toList(); // Älteste zuerst → Heute zuletzt
+    ).reversed.toList();
 
     return CustomScaffold(
       title: 'Verlauf',
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
@@ -30,29 +30,31 @@ class VerlaufScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 24,
-                runSpacing: 24,
-                children: last7Days.map((date) {
-                  final label = weekdayLabels[date.weekday - 1];
-                  final isToday = date.day == now.day &&
-                      date.month == now.month &&
-                      date.year == now.year;
+            child: Center(  // <-- This will center the buttons vertically and horizontally
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 24,
+                  runSpacing: 24,
+                  children: last7Days.map((date) {
+                    final label = weekdayLabels[date.weekday - 1];
+                    final isToday = date.day == now.day &&
+                        date.month == now.month &&
+                        date.year == now.year;
 
-                  final Color dayColor = isToday
-                      ? Colors.orange
-                      : Colors.green.shade700;
+                    final Color dayColor = isToday
+                        ? Colors.orange
+                        : Colors.green.shade700;
 
-                  return _dayButton(context, label, date, dayColor, isToday);
-                }).toList(),
+                    return _dayButton(context, label, date, dayColor, isToday);
+                  }).toList(),
+                ),
               ),
             ),
           ),
         ],
-      ),
+      )
     );
   }
 
@@ -62,6 +64,17 @@ class VerlaufScreen extends StatelessWidget {
       color: color,
       isToday: isToday,
       onTap: () {
+        final now = DateTime.now();
+        final last7Days = List.generate(
+          7,
+          (i) => now.subtract(Duration(days: i)),
+        ).reversed.toList();
+
+        final initialPage = last7Days.indexWhere((d) =>
+            d.day == date.day &&
+            d.month == date.month &&
+            d.year == date.year);
+
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
@@ -80,7 +93,7 @@ class VerlaufScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                _buildDetailPopup(context, date, color),
+                _buildPagedPopup(context, initialPage, last7Days),
               ],
             );
           },
@@ -89,155 +102,149 @@ class VerlaufScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor) {
-    final String formattedDate =
-        "${_weekdayLong(date.weekday)} – ${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}";
+}
 
-    final entries = [
-      {"time": "08:00", "event": "Sensor 1: ${40 + date.day % 10}% Bodenfeuchtigkeit"},
-      {"time": "12:00", "event": "Automatisch bewässert (${100 + date.day % 50} ml)"},
-      if (date.weekday == DateTime.friday)
-        {"time": "18:00", "event": "Sensorfehler erkannt"},
-    ];
+Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor) {
+  final String formattedDate =
+      "${_weekdayLong(date.weekday)} – ${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}";
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      maxChildSize: 0.85,
-      minChildSize: 0.4,
-      builder: (context, scrollController) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF7FDEB),
-            border: Border.all(color: borderColor, width: 2),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+  final entries = [
+    {"time": "08:00", "event": "Sensor 1: ${40 + date.day % 10}% Bodenfeuchtigkeit"},
+    {"time": "12:00", "event": "Automatisch bewässert (${100 + date.day % 50} ml)"},
+    if (date.weekday == DateTime.friday)
+      {"time": "18:00", "event": "Sensorfehler erkannt"},
+  ];
+
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF7FDEB),
+      border: Border.all(color: borderColor, width: 2),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Align(
+          alignment: Alignment.topLeft,
+          child: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: Alignment.topLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-              Text(
-                formattedDate,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: entries.length,
-                  itemBuilder: (context, index) {
-                    final entry = entries[index];
-                    final isLast = index == entries.length - 1;
-                    final event = entry["event"]!.toLowerCase();
+        ),
+        Text(
+          formattedDate,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.builder(
+            itemCount: entries.length,
+            itemBuilder: (context, index) {
+              final entry = entries[index];
+              final isLast = index == entries.length - 1;
+              final event = entry["event"]!.toLowerCase();
 
-                    IconData icon;
-                    Color iconColor;
+              IconData icon;
+              Color iconColor;
 
-                    if (event.contains("bodenfeuchtigkeit")) {
-                      icon = Icons.opacity;
-                      iconColor = Colors.teal;
-                    } else if (event.contains("wasserstand")) {
-                      icon = Icons.water_drop;
-                      iconColor = Colors.blue;
-                    } else if (event.contains("bewässert")) {
-                      icon = Icons.water;
-                      iconColor = Colors.green;
-                    } else if (event.contains("sensorfehler") || event.contains("fehler")) {
-                      icon = Icons.error_outline;
-                      iconColor = Colors.red;
-                    } else {
-                      icon = Icons.info_outline;
-                      iconColor = Colors.grey;
-                    }
+              if (event.contains("bodenfeuchtigkeit")) {
+                icon = Icons.opacity;
+                iconColor = Colors.teal;
+              } else if (event.contains("wasserstand")) {
+                icon = Icons.water_drop;
+                iconColor = Colors.blue;
+              } else if (event.contains("bewässert")) {
+                icon = Icons.water;
+                iconColor = Colors.green;
+              } else if (event.contains("sensorfehler") || event.contains("fehler")) {
+                icon = Icons.error_outline;
+                iconColor = Colors.red;
+              } else {
+                icon = Icons.info_outline;
+                iconColor = Colors.grey;
+              }
 
-                    return TweenAnimationBuilder<double>(
-                      duration: Duration(milliseconds: 300 + index * 70),
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      builder: (context, value, child) {
-                        return Opacity(
-                          opacity: value,
-                          child: Transform.translate(
-                            offset: Offset(0, (1 - value) * 20),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Stack(
+              return TweenAnimationBuilder<double>(
+                duration: Duration(milliseconds: 300 + index * 70),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - value) * 20),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 22,
+                      top: 0,
+                      bottom: isLast ? 8 : 0,
+                      child: Container(
+                        width: 2,
+                        color: isLast ? Colors.transparent : Colors.black26,
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.only(left: 48, right: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Positioned(
-                            left: 22,
-                            top: 0,
-                            bottom: isLast ? 8 : 0,
-                            child: Container(
-                              width: 2,
-                              color: isLast ? Colors.transparent : Colors.black26,
-                            ),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.symmetric(vertical: 10),
-                            padding: const EdgeInsets.only(left: 48, right: 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(entry["time"]!,
-                                    style: const TextStyle(fontSize: 16)),
-                                const SizedBox(width: 12),
-                                Icon(icon, size: 20, color: iconColor),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(entry["event"]!,
-                                      style: const TextStyle(fontSize: 16)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Positioned(
-                            left: 16,
-                            top: 14,
-                            child: CircleAvatar(
-                              radius: 6,
-                              backgroundColor: iconColor,
-                            ),
+                          Text(entry["time"]!, style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 12),
+                          Icon(icon, size: 20, color: iconColor),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(entry["event"]!, style: const TextStyle(fontSize: 16)),
                           ),
                         ],
                       ),
-                    );
-                  },
+                    ),
+                    Positioned(
+                      left: 16,
+                      top: 14,
+                      child: CircleAvatar(
+                        radius: 6,
+                        backgroundColor: iconColor,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        );
-      },
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+Widget _buildPagedPopup(BuildContext context, int initialPage, List<DateTime> dates) {
+  final PageController controller = PageController(initialPage: initialPage);
 
-  String _weekdayLong(int weekday) {
-    switch (weekday) {
-      case DateTime.monday:
-        return "Montag";
-      case DateTime.tuesday:
-        return "Dienstag";
-      case DateTime.wednesday:
-        return "Mittwoch";
-      case DateTime.thursday:
-        return "Donnerstag";
-      case DateTime.friday:
-        return "Freitag";
-      case DateTime.saturday:
-        return "Samstag";
-      case DateTime.sunday:
-        return "Sonntag";
-      default:
-        return "";
-    }
-  }
+  return DraggableScrollableSheet(
+    initialChildSize: 0.6,
+    maxChildSize: 0.85,
+    minChildSize: 0.4,
+    builder: (context, _) {
+      return PageView.builder(
+        controller: controller,
+        itemCount: dates.length,
+        itemBuilder: (context, index) {
+          final date = dates[index];
+          final isToday = date.day == DateTime.now().day &&
+                          date.month == DateTime.now().month &&
+                          date.year == DateTime.now().year;
+          final color = isToday ? Colors.orange : Colors.green.shade700;
+
+          return _buildDetailPopup(context, date, color);
+        },
+      );
+    },
+  );
 }
 
 class _AnimatedDayBox extends StatefulWidget {
@@ -336,3 +343,24 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
     );
   }
 }
+
+  String _weekdayLong(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return "Montag";
+      case DateTime.tuesday:
+        return "Dienstag";
+      case DateTime.wednesday:
+        return "Mittwoch";
+      case DateTime.thursday:
+        return "Donnerstag";
+      case DateTime.friday:
+        return "Freitag";
+      case DateTime.saturday:
+        return "Samstag";
+      case DateTime.sunday:
+        return "Sonntag";
+      default:
+        return "";
+    }
+  }

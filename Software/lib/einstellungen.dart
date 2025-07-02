@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'widgets/custom_scaffold.dart';
+import 'package:flutter/services.dart';
+
 
 class EinstellungenScreen extends StatefulWidget {
   const EinstellungenScreen({super.key});
@@ -39,6 +41,7 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                   activeColor: Colors.white,
                   activeTrackColor: Colors.green,
                   onChanged: (value) {
+                    HapticFeedback.mediumImpact();
                     setState(() {
                       _benachrichtigungenAktiv = value;
                     });
