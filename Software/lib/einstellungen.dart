@@ -16,13 +16,13 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
   bool _useTLS = false;
 
   final TextEditingController _brokerController = TextEditingController();
-  final TextEditingController _portController = TextEditingController(text: '1883');
+  final TextEditingController _portController = TextEditingController(text: '8883');
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   void _connectToBroker() {
     final broker = _brokerController.text.trim();
-    final port = int.tryParse(_portController.text.trim()) ?? 1883;
+    final port = int.tryParse(_portController.text.trim()) ?? 8883;
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 

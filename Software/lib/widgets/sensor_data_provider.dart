@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_service.dart';
-
 
 class SensorDataProvider extends ChangeNotifier {
   final List<Map<String, String>> _sensorData = List.generate(3, (index) => {
@@ -11,10 +11,14 @@ class SensorDataProvider extends ChangeNotifier {
     "lastWatered": "--",
   });
 
+  final List<Map<String, dynamic>> _history = [];
+
   final MqttService mqtt = MqttService();
 
   List<Map<String, String>> get sensorData => _sensorData;
+  List<Map<String, dynamic>> get history => _history;
 
+  // 🔌 Connect to broker
   void connectToMqtt({
     required String broker,
     required int port,
@@ -38,17 +42,26 @@ class SensorDataProvider extends ChangeNotifier {
     );
   }
 
-  void triggerWatering() {
-    const topic = 'esp32/watering';
-    const message = 'start';
+  // 🚿 Manual watering command
+  Future<void> triggerWatering() async {
+    mqtt.publish('esp32/watering', 'start');
 
-    mqtt.publish(topic, message);
+    _history.add({
+      'timestamp': DateTime.now(),
+      'type': 'watering',
+      'message': 'Manuelle Bewässerung gestartet',
+    });
+
+    await _saveHistoryToPrefs();
+    notifyListeners();
   }
 
-  void updateSensorFromJson(String jsonString) {
+  // 🌱 Sensor update from MQTT
+  Future<void> updateSensorFromJson(String jsonString) async {
     try {
       final data = Map<String, dynamic>.from(json.decode(jsonString));
       final int id = data["id"];
+
       if (id >= 0 && id < _sensorData.length) {
         _sensorData[id] = {
           "sensor": "Sensor ${id + 1}",
@@ -56,10 +69,50 @@ class SensorDataProvider extends ChangeNotifier {
           "waterLevel": "${data["waterLevel"]}%",
           "lastWatered": data["lastWatered"],
         };
+
+        _history.add({
+          'timestamp': DateTime.now(),
+          'type': 'sensor',
+          'sensorId': id,
+          'moisture': data["moisture"],
+          'waterLevel': data["waterLevel"],
+          'lastWatered': data["lastWatered"],
+        });
+
+        await _saveHistoryToPrefs();
         notifyListeners();
       }
     } catch (e) {
       debugPrint("❌ Sensor JSON parse error: $e");
+    }
+  }
+
+  // 💾 Save to SharedPreferences
+  Future<void> _saveHistoryToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = jsonEncode(_history.map((entry) {
+      return {
+        ...entry,
+        'timestamp': (entry['timestamp'] as DateTime).toIso8601String(),
+      };
+    }).toList());
+    await prefs.setString('sensor_history', encoded);
+  }
+
+  // 🔁 Load from SharedPreferences on app start
+  Future<void> loadHistoryFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = prefs.getString('sensor_history');
+    if (encoded != null) {
+      final List decoded = jsonDecode(encoded);
+      _history.clear();
+      _history.addAll(decoded.map((entry) {
+        return {
+          ...entry,
+          'timestamp': DateTime.parse(entry['timestamp']),
+        };
+      }).cast<Map<String, dynamic>>());
+      notifyListeners();
     }
   }
 }

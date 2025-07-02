@@ -2,61 +2,70 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'widgets/custom_scaffold.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'widgets/sensor_data_provider.dart';
+
 
 class VerlaufScreen extends StatelessWidget {
   const VerlaufScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final weekdayLabels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+@override
+Widget build(BuildContext context) {
+  final history = context.watch<SensorDataProvider>().history;
+  debugPrint("📘 Verlauf enthält ${history.length} Einträge");
+  // Group by date (today, yesterday, etc.)
+  final grouped = <String, List<Map<String, dynamic>>>{};
 
-    // Liste der letzten 7 Tage (beginnend mit heute)
-    final List<DateTime> last7Days = List.generate(
-      7,
-      (i) => now.subtract(Duration(days: i)),
-    ).reversed.toList();
-
-    return CustomScaffold(
-      title: 'Verlauf',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 12),
-            child: Text(
-              "🕓 Verlauf der letzten 7 Tage",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: Center(  // <-- This will center the buttons vertically and horizontally
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 24,
-                  runSpacing: 24,
-                  children: last7Days.map((date) {
-                    final label = weekdayLabels[date.weekday - 1];
-                    final isToday = date.day == now.day &&
-                        date.month == now.month &&
-                        date.year == now.year;
-
-                    final Color dayColor = isToday
-                        ? Colors.orange
-                        : Colors.green.shade700;
-
-                    return _dayButton(context, label, date, dayColor, isToday);
-                  }).toList(),
-                ),
-              ),
-            ),
-          ),
-        ],
-      )
-    );
+  for (var entry in history.reversed) {
+    final date = _formatDate(entry['timestamp']);
+    grouped.putIfAbsent(date, () => []).add(entry);
   }
+
+  return CustomScaffold(
+    title: 'Verlauf',
+    body: history.isEmpty
+        ? const Center(child: Text("Noch keine Daten im Verlauf."))
+        : ListView(
+            padding: const EdgeInsets.all(20),
+            children: grouped.entries.map((group) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(group.key, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ...group.value.map(_buildEntry).toList(),
+                  const SizedBox(height: 20),
+                ],
+              );
+            }).toList(),
+          ),
+  );
+}
+
+String _formatDate(DateTime date) {
+  final now = DateTime.now();
+  if (date.day == now.day && date.month == now.month && date.year == now.year) return 'Heute';
+  if (date.difference(now).inDays == -1) return 'Gestern';
+  return '${date.day}.${date.month}.${date.year}';
+}
+
+Widget _buildEntry(Map<String, dynamic> entry) {
+  if (entry['type'] == 'sensor') {
+    return ListTile(
+      leading: const Icon(Icons.thermostat),
+      title: Text('Sensor ${entry["sensorId"] + 1}: ${entry["moisture"]}% Feuchtigkeit, ${entry["waterLevel"]}% Wasser'),
+      subtitle: Text('Letzte Bewässerung: ${entry["lastWatered"]}'),
+    );
+  } else if (entry['type'] == 'watering') {
+    return ListTile(
+      leading: const Icon(Icons.water),
+      title: Text(entry['message']),
+    );
+  } else {
+    return const SizedBox.shrink();
+  }
+}
+
 
   Widget _dayButton(BuildContext context, String label, DateTime date, Color color, bool isToday) {
     return _AnimatedDayBox(

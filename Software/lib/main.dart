@@ -7,14 +7,20 @@ import 'package:provider/provider.dart';
 
 
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final provider = SensorDataProvider();
+  await provider.loadHistoryFromPrefs();
+
   runApp(
     ChangeNotifierProvider(
-      create: (_) => SensorDataProvider(),
+      create: (_) => provider,
       child: const MyApp(),
     ),
   );
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
