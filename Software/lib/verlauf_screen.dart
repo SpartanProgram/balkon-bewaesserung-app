@@ -109,6 +109,7 @@ Widget _buildEntry(Map<String, dynamic> entry) {
         label: label,
         color: color,
         isToday: isToday,
+        entryCount: entries.length,
         onTap: () {
           showModalBottomSheet(
             context: context,
@@ -239,12 +240,14 @@ class _AnimatedDayBox extends StatefulWidget {
   final Color color;
   final VoidCallback onTap;
   final bool isToday;
+  final int entryCount;
 
   const _AnimatedDayBox({
     required this.label,
     required this.color,
     required this.onTap,
     this.isToday = false,
+    this.entryCount = 0,
   });
 
   @override
@@ -295,35 +298,61 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 150),
           opacity: _opacity,
-          child: Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: widget.color,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: widget.isToday
-                  ? [
-                      BoxShadow(
-                        color: Colors.orange.withOpacity(0.5),
-                        blurRadius: 10,
-                        spreadRadius: 1.5,
-                      ),
-                    ]
-                  : [],
-              border: widget.isToday
-                  ? Border.all(color: Colors.white, width: 2)
-                  : null,
-            ),
-            child: Center(
-              child: Text(
-                widget.label,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+          child: Stack(
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: widget.isToday
+                      ? [
+                          BoxShadow(
+                            color: Colors.orange.withOpacity(0.5),
+                            blurRadius: 10,
+                            spreadRadius: 1.5,
+                          ),
+                        ]
+                      : [],
+                  border: widget.isToday
+                      ? Border.all(color: Colors.white, width: 2)
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    widget.label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
-            ),
+
+              // ✅ Badge if count > 0
+              if (widget.entryCount > 0)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.redAccent,
+                    ),
+                    child: Text(
+                      '${widget.entryCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
