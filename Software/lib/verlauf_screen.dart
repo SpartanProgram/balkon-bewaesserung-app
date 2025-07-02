@@ -136,7 +136,7 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
     ),
     child: Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       children: [
         Align(
           alignment: Alignment.topLeft,
@@ -156,7 +156,10 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor,
             itemBuilder: (context, index) {
               final entry = entries[index];
               final isLast = index == entries.length - 1;
-              final event = entry["event"]!.toLowerCase();
+              final String event = entry["event"] ??
+                  (entry["type"] == "sensor"
+                      ? "Sensor ${entry["sensorId"] + 1}: ${entry["moisture"]}% Bodenfeuchtigkeit, ${entry["waterLevel"]}% Wasser"
+                      : entry["message"] ?? "Unbekannt");
 
               IconData icon;
               Color iconColor;
@@ -207,7 +210,10 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor,
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(entry["time"]!, style: const TextStyle(fontSize: 16)),
+                        Text(
+                          entry["time"] ?? "${entry["timestamp"]?.hour.toString().padLeft(2, '0')}:${entry["timestamp"]?.minute.toString().padLeft(2, '0')}",
+                          style: const TextStyle(fontSize: 16),
+                        ),
                           const SizedBox(width: 12),
                           Icon(icon, size: 20, color: iconColor),
                           const SizedBox(width: 8),
@@ -333,25 +339,33 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
 
               // ✅ Badge if count > 0
               if (widget.entryCount > 0)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.redAccent,
-                    ),
-                    child: Text(
-                      '${widget.entryCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: widget.entryCount > 0
+                      ? Container(
+                          key: ValueKey<int>(widget.entryCount),
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.redAccent,
+                          ),
+                          child: Text(
+                            '${widget.entryCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
                 ),
+              ),
             ],
           ),
         ),
