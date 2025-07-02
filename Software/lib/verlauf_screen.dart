@@ -12,42 +12,72 @@ class VerlaufScreen extends StatelessWidget {
 @override
 Widget build(BuildContext context) {
   final history = context.watch<SensorDataProvider>().history;
-  debugPrint("📘 Verlauf enthält ${history.length} Einträge");
-  // Group by date (today, yesterday, etc.)
-  final grouped = <String, List<Map<String, dynamic>>>{};
+  final now = DateTime.now();
 
-  for (var entry in history.reversed) {
-    final date = _formatDate(entry['timestamp']);
-    grouped.putIfAbsent(date, () => []).add(entry);
+  // Group by date
+  final Map<String, List<Map<String, dynamic>>> grouped = {};
+  for (var entry in history) {
+    final key = _formatDateKey(entry['timestamp'] as DateTime);
+    grouped.putIfAbsent(key, () => []).add(entry);
   }
+
+  final todayKey = _formatDateKey(now);
+  final todayEntries = grouped[todayKey] ?? [];
+
+  final previousDays = List.generate(6, (i) {
+    final day = now.subtract(Duration(days: i + 1));
+    return {
+      "label": _formatDateLabel(day),
+      "key": _formatDateKey(day),
+      "date": day,
+    };
+  }).where((d) => grouped.containsKey(d["key"])).toList();
 
   return CustomScaffold(
     title: 'Verlauf',
-    body: history.isEmpty
-        ? const Center(child: Text("Noch keine Daten im Verlauf."))
-        : ListView(
-            padding: const EdgeInsets.all(20),
-            children: grouped.entries.map((group) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(group.key, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  ...group.value.map(_buildEntry).toList(),
-                  const SizedBox(height: 20),
-                ],
+    body: ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        if (todayEntries.isNotEmpty) ...[
+          const Text("Heute", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ...todayEntries.map(_buildEntry),
+          const SizedBox(height: 24),
+        ],
+        if (previousDays.isNotEmpty)
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: previousDays.map((d) {
+              return _dayButton(
+                context,
+                d["key"] as String,
+                d["date"] as DateTime,
+                Colors.green.shade700,
+                false,
+                entries: grouped[d["key"]as String]!,
               );
             }).toList(),
-          ),
+          )
+        else
+          const Center(child: Text("Kein Verlauf für die letzten 7 Tage.")),
+      ],
+    ),
   );
 }
 
-String _formatDate(DateTime date) {
+String _formatDateKey(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}';
+
+String _formatDateLabel(DateTime dt) {
   final now = DateTime.now();
-  if (date.day == now.day && date.month == now.month && date.year == now.year) return 'Heute';
-  if (date.difference(now).inDays == -1) return 'Gestern';
-  return '${date.day}.${date.month}.${date.year}';
+  if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+    return 'Heute';
+  }
+  if (now.difference(dt).inDays == 1) return 'Gestern';
+
+  return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}';
 }
+
 
 Widget _buildEntry(Map<String, dynamic> entry) {
   if (entry['type'] == 'sensor') {
@@ -67,62 +97,35 @@ Widget _buildEntry(Map<String, dynamic> entry) {
 }
 
 
-  Widget _dayButton(BuildContext context, String label, DateTime date, Color color, bool isToday) {
-    return _AnimatedDayBox(
-      label: label,
-      color: color,
-      isToday: isToday,
-      onTap: () {
-        final now = DateTime.now();
-        final last7Days = List.generate(
-          7,
-          (i) => now.subtract(Duration(days: i)),
-        ).reversed.toList();
-
-        final initialPage = last7Days.indexWhere((d) =>
-            d.day == date.day &&
-            d.month == date.month &&
-            d.year == date.year);
-
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) {
-            return Stack(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.3),
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  ),
-                ),
-                _buildPagedPopup(context, initialPage, last7Days),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
+    Widget _dayButton(
+      BuildContext context,
+      String label,
+      DateTime date,
+      Color color,
+      bool isToday, {
+      required List<Map<String, dynamic>> entries,
+    }) {
+      return _AnimatedDayBox(
+        label: label,
+        color: color,
+        isToday: isToday,
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) {
+              return _buildDetailPopup(context, date, color, entries);
+            },
+          );
+        },
+      );
+    }
 }
 
-Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor) {
+Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor, List<Map<String, dynamic>> entries) {
   final String formattedDate =
       "${_weekdayLong(date.weekday)} – ${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}";
-
-  final entries = [
-    {"time": "08:00", "event": "Sensor 1: ${40 + date.day % 10}% Bodenfeuchtigkeit"},
-    {"time": "12:00", "event": "Automatisch bewässert (${100 + date.day % 50} ml)"},
-    if (date.weekday == DateTime.friday)
-      {"time": "18:00", "event": "Sensorfehler erkannt"},
-  ];
 
   return Container(
     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -231,31 +234,6 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor)
     ),
   );
 }
-Widget _buildPagedPopup(BuildContext context, int initialPage, List<DateTime> dates) {
-  final PageController controller = PageController(initialPage: initialPage);
-
-  return DraggableScrollableSheet(
-    initialChildSize: 0.6,
-    maxChildSize: 0.85,
-    minChildSize: 0.4,
-    builder: (context, _) {
-      return PageView.builder(
-        controller: controller,
-        itemCount: dates.length,
-        itemBuilder: (context, index) {
-          final date = dates[index];
-          final isToday = date.day == DateTime.now().day &&
-                          date.month == DateTime.now().month &&
-                          date.year == DateTime.now().year;
-          final color = isToday ? Colors.orange : Colors.green.shade700;
-
-          return _buildDetailPopup(context, date, color);
-        },
-      );
-    },
-  );
-}
-
 class _AnimatedDayBox extends StatefulWidget {
   final String label;
   final Color color;
