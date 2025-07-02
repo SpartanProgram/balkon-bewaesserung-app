@@ -43,7 +43,7 @@ class MqttService {
       );
     } catch (e) {
       _client.disconnect();
-      debugPrint("❌ MQTT Connect failed: $e");
+      debugPrint("❌ MQTT connect failed: $e");
       return;
     }
 
@@ -59,7 +59,7 @@ class MqttService {
         onMessage?.call(payload);
       });
     } else {
-      debugPrint("❌ Connection failed: ${_client.connectionStatus}");
+      debugPrint("❌ MQTT status: ${_client.connectionStatus!.state}");
       _client.disconnect();
     }
   }
