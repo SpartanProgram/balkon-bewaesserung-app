@@ -8,10 +8,6 @@ import 'package:flutter/services.dart';
 import '../home_screen.dart';
 import 'package:provider/provider.dart';
 
-
-
-
-
 class CustomScaffold extends StatefulWidget {
   final String title;
   final Widget body;

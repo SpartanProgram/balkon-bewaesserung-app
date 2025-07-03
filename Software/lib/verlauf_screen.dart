@@ -51,7 +51,7 @@ Widget build(BuildContext context) {
             children: previousDays.map((d) {
               return _dayButton(
                 context,
-                d["key"] as String,
+                d["label"] as String,
                 d["date"] as DateTime,
                 Colors.green.shade700,
                 false,
@@ -69,15 +69,9 @@ Widget build(BuildContext context) {
 String _formatDateKey(DateTime dt) => '${dt.year}-${dt.month}-${dt.day}';
 
 String _formatDateLabel(DateTime dt) {
-  final now = DateTime.now();
-  if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-    return 'Heute';
-  }
-  if (now.difference(dt).inDays == 1) return 'Gestern';
-
-  return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}';
+  const weekdaysShort = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  return weekdaysShort[dt.weekday - 1];
 }
-
 
 Widget _buildEntry(Map<String, dynamic> entry) {
   if (entry['type'] == 'sensor') {
@@ -218,7 +212,12 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor,
                           Icon(icon, size: 20, color: iconColor),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(entry["event"]!, style: const TextStyle(fontSize: 16)),
+                            child: Text(
+                              entry["event"] ?? (entry["type"] == "sensor"
+                                ? "Sensor ${entry["sensorId"] + 1}: ${entry["moisture"]}% Feuchtigkeit, ${entry["waterLevel"]}% Wasser"
+                                : entry["message"] ?? "Unbekannt"),
+                              style: const TextStyle(fontSize: 16),
+                            ),
                           ),
                         ],
                       ),
@@ -307,8 +306,8 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
           child: Stack(
             children: [
               Container(
-                width: 70,
-                height: 70,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   color: widget.color,
                   borderRadius: BorderRadius.circular(16),
@@ -325,13 +324,17 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
                       ? Border.all(color: Colors.white, width: 2)
                       : null,
                 ),
-                child: Center(
-                  child: Text(
-                    widget.label,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Center(
+                    child: Text(
+                      widget.label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
@@ -340,8 +343,8 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
               // ✅ Badge if count > 0
               if (widget.entryCount > 0)
               Positioned(
-                top: 4,
-                right: 4,
+                top: 6,
+                right: 6,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   transitionBuilder: (child, animation) =>
