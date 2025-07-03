@@ -1,12 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../main.dart';
 import '../verlauf_screen.dart';
 import '../zeitplan.dart';
 import '../einstellungen.dart';
 import 'package:flutter/services.dart';
 import '../home_screen.dart';
-import 'package:provider/provider.dart';
 
 class CustomScaffold extends StatefulWidget {
   final String title;
