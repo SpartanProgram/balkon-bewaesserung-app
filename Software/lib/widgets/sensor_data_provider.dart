@@ -101,18 +101,20 @@ class SensorDataProvider extends ChangeNotifier {
 
   // 🔁 Load from SharedPreferences on app start
   Future<void> loadHistoryFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final encoded = prefs.getString('sensor_history');
-    if (encoded != null) {
-      final List decoded = jsonDecode(encoded);
-      _history.clear();
-      _history.addAll(decoded.map((entry) {
-        return {
-          ...entry,
-          'timestamp': DateTime.parse(entry['timestamp']),
-        };
-      }).cast<Map<String, dynamic>>());
-      notifyListeners();
-    }
+  final prefs = await SharedPreferences.getInstance();
+  final encoded = prefs.getString('sensor_history');
+  if (encoded != null) {
+    final List<dynamic> decoded = jsonDecode(encoded);
+    _history.clear();
+    _history.addAll(decoded.map((entry) {
+      final map = Map<String, dynamic>.from(entry);
+      return {
+        ...map,
+        'timestamp': DateTime.parse(map['timestamp']),
+      };
+    }).toList());
+    notifyListeners();
   }
+}
+
 }

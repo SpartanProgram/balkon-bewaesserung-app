@@ -1,4 +1,4 @@
-# Flutter/Dart
+# Flutter & Dart
 .dart_tool/
 .packages
 .pub-cache/
@@ -6,26 +6,39 @@
 .flutter-plugins-dependencies
 .buildlog/
 .melos_tool/
-.idea/
 .metadata
 
 # Build outputs
 build/
 **/build/
-.flutter-*
 generated_plugin_registrant.dart
+.flutter-*
 
 # VS Code
 .vscode/
 *.code-workspace
 
-# macOS
-macos/Flutter/ephemeral/
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# iOS & macOS
+ios/Flutter/
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcworkspace/xcuserdata/
+ios/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+macos/Flutter/
 macos/Pods/
 macos/.symlinks/
 macos/Runner.xcworkspace/
-macos/Runner.xcodeproj/project.xcworkspace/
 macos/Runner.xcodeproj/xcuserdata/
+macos/Runner.xcodeproj/project.xcworkspace/
 macos/Runner.xcworkspace/xcuserdata/
 
 # Xcode
@@ -35,41 +48,22 @@ macos/Runner.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcodeproj/*.pbxuser
 
-# iOS
-ios/Flutter/Flutter.framework/
-ios/Flutter/Flutter.podspec
-ios/Flutter/Generated.xcconfig
-ios/Pods/
-ios/.symlinks/
-ios/.flutter-plugins
-ios/.flutter-plugins-dependencies
-ios/Runner.xcworkspace/
-ios/Runner.xcodeproj/xcuserdata/
-
 # Android
 android/.gradle/
 android/.idea/
 android/.settings/
 android/local.properties
-android/.gradle/
+android/key.properties
 android/build/
-**/android/key.properties
-
-# JetBrains/IntelliJ
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# Logs
-*.log
-
-# Others
-.env
-*.bak
-*.tmp
-*.swp
 
 # System
 .DS_Store
 Thumbs.db
+
+# Logs, backups
+*.log
+*.tmp
+*.bak
+
+# Environment
+.env
