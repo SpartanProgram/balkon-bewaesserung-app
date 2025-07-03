@@ -31,6 +31,8 @@ ios/.symlinks/
 ios/Runner.xcworkspace/
 ios/Runner.xcodeproj/xcuserdata/
 ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcodeproj/project.pbxproj
+ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
 ios/Flutter.podspec
 ios/Flutter/Generated.xcconfig
 macos/Flutter/
