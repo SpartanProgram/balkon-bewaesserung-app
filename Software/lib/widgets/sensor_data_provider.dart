@@ -57,45 +57,63 @@ class SensorDataProvider extends ChangeNotifier {
   }
 
   // 🌱 Sensor update from MQTT
-  Future<void> updateSensorFromJson(String jsonString) async {
-    try {
-      final data = Map<String, dynamic>.from(json.decode(jsonString));
-      final int id = data["id"];
+    Future<void> updateSensorFromJson(String jsonString) async {
 
-      if (id >= 0 && id < _sensorData.length) {
-        _sensorData[id] = {
-          "sensor": "Sensor ${id + 1}",
-          "moisture": "${data["moisture"]}%",
-          "waterLevel": "${data["waterLevel"]}%",
-          "lastWatered": data["lastWatered"],
-        };
+      debugPrint("📥 Received MQTT: $jsonString");
 
-      if (data["moisture"] != null && data["moisture"] <= 20) {
-          _history.add({
-            'timestamp': DateTime.now(),
-            'type': 'sensor',
-            'sensorId': id,
-            'moisture': data["moisture"],
-            'event': 'Sensor ${id + 1}: ${data["moisture"]}% Feuchtigkeit',
-          });
+      try {
+        final data = Map<String, dynamic>.from(json.decode(jsonString));
+        final int? id = data["id"];
+
+        if (id != null && id >= 0 && id < _sensorData.length) {
+          // Only update values if they exist
+          if (data.containsKey("moisture")) {
+            _sensorData[id]["moisture"] = "${data["moisture"]}%";
+          }
+          if (data.containsKey("waterLevel")) {
+            _sensorData[id]["waterLevel"] = "${data["waterLevel"]}%";
+          }
+          if (data.containsKey("lastWatered")) {
+            _sensorData[id]["lastWatered"] = data["lastWatered"];
+          }
+
+          // 🚨 Add threshold entries
+          if (data["moisture"] != null && data["moisture"] <= 20) {
+            _history.add({
+              'timestamp': DateTime.now(),
+              'type': 'sensor',
+              'sensorId': id,
+              'event': 'Sensor ${id + 1}: ${data["moisture"]}% Feuchtigkeit',
+            });
+          }
+
+          if (data["waterLevel"] != null && data["waterLevel"] <= 20) {
+            _history.add({
+              'timestamp': DateTime.now(),
+              'type': 'sensor',
+              'sensorId': id,
+              'event': 'Sensor ${id + 1}: ${data["waterLevel"]}% Wasserstand',
+            });
+          }
+
+          // ✅ Add custom event
+          if (data.containsKey("event")) {
+            _history.add({
+              'timestamp': DateTime.now(),
+              'type': 'sensor',
+              'sensorId': id,
+              'event': data["event"],
+            });
+          }
+
+          await _saveHistoryToPrefs();
+          notifyListeners();
         }
-
-      if (data["waterLevel"] != null && data["waterLevel"] <= 20) {
-          _history.add({
-            'timestamp': DateTime.now(),
-            'type': 'sensor',
-            'sensorId': id,
-            'waterLevel': data["waterLevel"],
-            'event': 'Sensor ${id + 1}: ${data["waterLevel"]}% Wasserstand',
-          });
-        await _saveHistoryToPrefs();
-        notifyListeners();
+      } catch (e) {
+        debugPrint("❌ Sensor JSON parse error: $e");
       }
     }
-    } catch (e) {
-      debugPrint("❌ Sensor JSON parse error: $e");
-    }
-  }
+
 
   // 💾 Save to SharedPreferences
   Future<void> _saveHistoryToPrefs() async {

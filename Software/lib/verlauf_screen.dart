@@ -41,7 +41,9 @@ Widget build(BuildContext context) {
         if (todayEntries.isNotEmpty) ...[
           const Text("Heute", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          ...todayEntries.map(_buildEntry),
+          ...List.generate(todayEntries.length, (index) {
+            return buildTimelineEntry(todayEntries[index], index == todayEntries.length - 1);
+          }),
           const SizedBox(height: 24),
         ],
         if (previousDays.isNotEmpty)
@@ -75,9 +77,32 @@ String _formatDateLabel(DateTime dt) {
 
 Widget _buildEntry(Map<String, dynamic> entry) {
   if (entry['type'] == 'sensor') {
+    final String event = entry["event"] ?? 'Sensor-Update';
+
+    // Add the same icon logic here
+    IconData icon;
+    Color iconColor;
+
+    if (event.toLowerCase().contains("feuchtigkeit")) {
+      icon = Icons.opacity;
+      iconColor = Colors.teal;
+    } else if (event.toLowerCase().contains("wasserstand")) {
+      icon = Icons.water_drop;
+      iconColor = Colors.blue;
+    } else if (event.toLowerCase().contains("bewässert")) {
+      icon = Icons.water;
+      iconColor = Colors.green;
+    } else if (event.toLowerCase().contains("sensorfehler") || event.toLowerCase().contains("fehler")) {
+      icon = Icons.error_outline;
+      iconColor = Colors.red;
+    } else {
+      icon = Icons.info_outline;
+      iconColor = Colors.grey;
+    }
+
     return ListTile(
-      leading: const Icon(Icons.thermostat),
-      title: Text(entry["event"] ?? 'Sensor-Update'),      
+      leading: Icon(icon, color: iconColor),
+      title: Text(event),
       subtitle: Text('${entry["timestamp"].hour.toString().padLeft(2, '0')}:${entry["timestamp"].minute.toString().padLeft(2, '0')}'),
     );
   } else if (entry['type'] == 'watering') {
@@ -148,91 +173,23 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor,
           child: ListView.builder(
             itemCount: entries.length,
             itemBuilder: (context, index) {
-              final entry = entries[index];
-              final isLast = index == entries.length - 1;
-              final String event = entry["event"] ??
-                  (entry["type"] == "sensor"
-                      ? "Sensor ${entry["sensorId"] + 1}: ${entry["moisture"]}% Bodenfeuchtigkeit, ${entry["waterLevel"]}% Wasser"
-                      : entry["message"] ?? "Unbekannt");
+            final entry = entries[index];
+            final isLast = index == entries.length - 1;
 
-              IconData icon;
-              Color iconColor;
-
-              if (event.contains("bodenfeuchtigkeit")) {
-                icon = Icons.opacity;
-                iconColor = Colors.teal;
-              } else if (event.contains("wasserstand")) {
-                icon = Icons.water_drop;
-                iconColor = Colors.blue;
-              } else if (event.contains("bewässert")) {
-                icon = Icons.water;
-                iconColor = Colors.green;
-              } else if (event.contains("sensorfehler") || event.contains("fehler")) {
-                icon = Icons.error_outline;
-                iconColor = Colors.red;
-              } else {
-                icon = Icons.info_outline;
-                iconColor = Colors.grey;
-              }
-
-              return TweenAnimationBuilder<double>(
-                duration: Duration(milliseconds: 300 + index * 70),
-                tween: Tween(begin: 0.0, end: 1.0),
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - value) * 20),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 22,
-                      top: 0,
-                      bottom: isLast ? 8 : 0,
-                      child: Container(
-                        width: 2,
-                        color: isLast ? Colors.transparent : Colors.black26,
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 10),
-                      padding: const EdgeInsets.only(left: 48, right: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                        Text(
-                          entry["time"] ?? "${entry["timestamp"]?.hour.toString().padLeft(2, '0')}:${entry["timestamp"]?.minute.toString().padLeft(2, '0')}",
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                          const SizedBox(width: 12),
-                          Icon(icon, size: 20, color: iconColor),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              entry["event"] ?? (entry["type"] == "sensor"
-                                ? "Sensor ${entry["sensorId"] + 1}: ${entry["moisture"]}% Feuchtigkeit, ${entry["waterLevel"]}% Wasser"
-                                : entry["message"] ?? "Unbekannt"),
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      left: 16,
-                      top: 14,
-                      child: CircleAvatar(
-                        radius: 6,
-                        backgroundColor: iconColor,
-                      ),
-                    ),
-                  ],
-                ),
-              );
+            return TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 300 + index * 70),
+              tween: Tween(begin: 0.0, end: 1.0),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, (1 - value) * 20),
+                    child: child,
+                  ),
+                );
+              },
+              child: buildTimelineEntry(entry, isLast),
+            );
             },
           ),
         ),
@@ -397,3 +354,72 @@ class _AnimatedDayBoxState extends State<_AnimatedDayBox>
         return "";
     }
   }
+
+  Widget buildTimelineEntry(Map<String, dynamic> entry, bool isLast) {
+  final String event = entry["event"] ??
+      (entry["type"] == "sensor"
+          ? "Sensor ${entry["sensorId"] + 1}: ${entry["moisture"]}% Bodenfeuchtigkeit, ${entry["waterLevel"]}% Wasser"
+          : entry["message"] ?? "Unbekannt");
+
+  IconData icon;
+  Color iconColor;
+
+  if (event.toLowerCase().contains("feuchtigkeit")) {
+    icon = Icons.opacity;
+    iconColor = Colors.teal;
+  } else if (event.toLowerCase().contains("wasserstand")) {
+    icon = Icons.water_drop;
+    iconColor = Colors.blue;
+  } else if (event.toLowerCase().contains("bewässert")) {
+    icon = Icons.water;
+    iconColor = Colors.green;
+  } else if (event.toLowerCase().contains("sensorfehler") || event.toLowerCase().contains("fehler")) {
+    icon = Icons.error_outline;
+    iconColor = Colors.red;
+  } else {
+    icon = Icons.info_outline;
+    iconColor = Colors.grey;
+  }
+
+  return Stack(
+    children: [
+      Positioned(
+        left: 22,
+        top: 0,
+        bottom: isLast ? 8 : 0,
+        child: Container(
+          width: 2,
+          color: isLast ? Colors.transparent : Colors.black26,
+        ),
+      ),
+      Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.only(left: 48, right: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              entry["time"] ??
+                  "${entry["timestamp"]?.hour.toString().padLeft(2, '0')}:${entry["timestamp"]?.minute.toString().padLeft(2, '0')}",
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(width: 12),
+            Icon(icon, size: 20, color: iconColor),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(event, style: const TextStyle(fontSize: 16)),
+            ),
+          ],
+        ),
+      ),
+      Positioned(
+        left: 16,
+        top: 14,
+        child: CircleAvatar(
+          radius: 6,
+          backgroundColor: iconColor,
+        ),
+      ),
+    ],
+  );
+}
