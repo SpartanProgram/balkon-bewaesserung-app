@@ -75,47 +75,6 @@ String _formatDateLabel(DateTime dt) {
   return weekdaysShort[dt.weekday - 1];
 }
 
-Widget _buildEntry(Map<String, dynamic> entry) {
-  if (entry['type'] == 'sensor') {
-    final String event = entry["event"] ?? 'Sensor-Update';
-
-    // Add the same icon logic here
-    IconData icon;
-    Color iconColor;
-
-    if (event.toLowerCase().contains("feuchtigkeit")) {
-      icon = Icons.opacity;
-      iconColor = Colors.teal;
-    } else if (event.toLowerCase().contains("wasserstand")) {
-      icon = Icons.water_drop;
-      iconColor = Colors.blue;
-    } else if (event.toLowerCase().contains("bewässert")) {
-      icon = Icons.water;
-      iconColor = Colors.green;
-    } else if (event.toLowerCase().contains("sensorfehler") || event.toLowerCase().contains("fehler")) {
-      icon = Icons.error_outline;
-      iconColor = Colors.red;
-    } else {
-      icon = Icons.info_outline;
-      iconColor = Colors.grey;
-    }
-
-    return ListTile(
-      leading: Icon(icon, color: iconColor),
-      title: Text(event),
-      subtitle: Text('${entry["timestamp"].hour.toString().padLeft(2, '0')}:${entry["timestamp"].minute.toString().padLeft(2, '0')}'),
-    );
-  } else if (entry['type'] == 'watering') {
-    return ListTile(
-      leading: const Icon(Icons.water),
-      title: Text(entry['message']),
-    );
-  } else {
-    return const SizedBox.shrink();
-  }
-}
-
-
     Widget _dayButton(
       BuildContext context,
       String label,
@@ -131,16 +90,16 @@ Widget _buildEntry(Map<String, dynamic> entry) {
         entryCount: entries.length,
         onTap: () {
           showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) {
-              return _buildDetailPopup(context, date, color, entries);
-            },
-          );
-        },
-      );
-    }
+          context: context,
+           isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) {
+            return _buildDetailPopup(context, date, color, entries);
+          },
+        );
+      },
+    );
+  }
 }
 
 Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor, List<Map<String, dynamic>> entries) {
