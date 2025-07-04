@@ -14,6 +14,8 @@ class EinstellungenScreen extends StatefulWidget {
 class _EinstellungenScreenState extends State<EinstellungenScreen> {
   bool _benachrichtigungenAktiv = true;
   bool _useTLS = false;
+  bool _passwordVisible = false;
+
 
   final TextEditingController _brokerController = TextEditingController();
   final TextEditingController _portController = TextEditingController(text: '8883');
@@ -130,14 +132,24 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: "Passwort (optional)",
-                      border: OutlineInputBorder(),
+                 TextField(
+                  controller: _passwordController,
+                  obscureText: !_passwordVisible,
+                  decoration: InputDecoration(
+                    labelText: "Passwort (optional)",
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
                     ),
                   ),
+                ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
