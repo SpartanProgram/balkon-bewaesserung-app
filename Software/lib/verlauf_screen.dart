@@ -77,8 +77,8 @@ Widget _buildEntry(Map<String, dynamic> entry) {
   if (entry['type'] == 'sensor') {
     return ListTile(
       leading: const Icon(Icons.thermostat),
-      title: Text('Sensor ${entry["sensorId"] + 1}: ${entry["moisture"]}% Feuchtigkeit, ${entry["waterLevel"]}% Wasser'),
-      subtitle: Text('Letzte Bewässerung: ${entry["lastWatered"]}'),
+      title: Text(entry["event"] ?? 'Sensor-Update'),      
+      subtitle: Text('${entry["timestamp"].hour.toString().padLeft(2, '0')}:${entry["timestamp"].minute.toString().padLeft(2, '0')}'),
     );
   } else if (entry['type'] == 'watering') {
     return ListTile(

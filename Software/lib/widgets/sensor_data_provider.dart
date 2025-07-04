@@ -70,18 +70,28 @@ class SensorDataProvider extends ChangeNotifier {
           "lastWatered": data["lastWatered"],
         };
 
-        _history.add({
-          'timestamp': DateTime.now(),
-          'type': 'sensor',
-          'sensorId': id,
-          'moisture': data["moisture"],
-          'waterLevel': data["waterLevel"],
-          'lastWatered': data["lastWatered"],
-        });
+      if (data["moisture"] != null && data["moisture"] <= 20) {
+          _history.add({
+            'timestamp': DateTime.now(),
+            'type': 'sensor',
+            'sensorId': id,
+            'moisture': data["moisture"],
+            'event': 'Sensor ${id + 1}: ${data["moisture"]}% Feuchtigkeit',
+          });
+        }
 
+      if (data["waterLevel"] != null && data["waterLevel"] <= 20) {
+          _history.add({
+            'timestamp': DateTime.now(),
+            'type': 'sensor',
+            'sensorId': id,
+            'waterLevel': data["waterLevel"],
+            'event': 'Sensor ${id + 1}: ${data["waterLevel"]}% Wasserstand',
+          });
         await _saveHistoryToPrefs();
         notifyListeners();
       }
+    }
     } catch (e) {
       debugPrint("❌ Sensor JSON parse error: $e");
     }
