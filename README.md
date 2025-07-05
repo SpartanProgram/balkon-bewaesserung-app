@@ -33,3 +33,16 @@ A smart mobile app developed with **Flutter & Dart** to control an **automated b
 ![IMG_4381](https://github.com/user-attachments/assets/1e35e693-72f1-49e5-824a-d46cb1241e20)
 ![IMG_4382](https://github.com/user-attachments/assets/42db5ae7-3d01-4135-a67d-1e17f81d65e7)
 ![IMG_4383](https://github.com/user-attachments/assets/3c9de8a8-f325-49bc-9a97-ef358269d3bb)
+
+
+---
+
+## 🧪 How to Run
+
+```bash
+flutter pub get
+flutter run
+
+
+🎓 About the Project
+This app was developed as part of a practical software project at HTW Berlin in the field of Ingenieurinformatik. It showcases cross-platform app development combined with IoT system interaction.
