@@ -3,19 +3,21 @@
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <Preferences.h>
+#include <ArduinoJson.h>
 
-// WiFi Credentials
+// WiFi credentials
 const char* ssid = "Pixel 6";
 const char* password = "namasaya";
 
-// MQTT Broker Info (HiveMQ Cloud)
+// MQTT broker info (HiveMQ Cloud)
 const char* mqttServer = "cd5a01681d434871ab7952c6e6b0252d.s1.eu.hivemq.cloud";
 const int mqttPort = 8883;
 const char* mqttUser = "dzaid";
 const char* mqttPassword = "Ffsnoway1!";
-const char* mqttTopic = "pflanzen/pflanze01";
+const char* mqttPubTopic = "pflanzen/pflanze01";
+const char* mqttSubTopic = "pflanzen/pflanze01/control";
 
-// TLS Root Certificate from HiveMQ
+// TLS Root Certificate
 const char* root_ca = \
 "-----BEGIN CERTIFICATE-----\n" \
 "MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\n" \
@@ -49,102 +51,176 @@ const char* root_ca = \
 "emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=\n" \
 "-----END CERTIFICATE-----";
 
+// Pins
+const int moisturePins[3] = {35, 32, 33};
+const int pumpPins[3] = {25, 26, 27};
 
-
-// Pins and Timing
-const int moistureSensorPin = 35;
+// Timing
+const unsigned long publishInterval = 60000; // 60 seconds
+unsigned long lastPublishTime = 0;
 const unsigned long calibrationPeriod = 20000;
-const unsigned long sleepTimeSeconds = 20;
 
-// Preferences for calibration
+// Pump control timing
+const unsigned long pumpDuration = 15000;  // 15 seconds
+unsigned long pumpStartTimes[3] = {0, 0, 0};  // Track when each pump was turned on
+bool pumpActive[3] = {false, false, false};  // Track pump state
+
+// Preferences
 Preferences preferences;
-int airValue;
-int waterValue;
+int airValues[3];
+int waterValues[3];
 unsigned long startTime;
+bool isCalibrated;
 
+// WiFi & MQTT
 WiFiClientSecure secureClient;
 PubSubClient client(secureClient);
 
+// Function declarations
 void setup_wifi();
 void reconnect();
+void publishSensorData();
+void mqttCallback(char* topic, byte* payload, unsigned int length);
 
 void setup() {
   Serial.begin(115200);
+
+  for (int i = 0; i < 3; i++) {
+    pinMode(pumpPins[i], OUTPUT);
+    digitalWrite(pumpPins[i], LOW);
+  }
+
   preferences.begin("moisture", false);
 
-  airValue = preferences.getInt("airValue", 4095);
-  waterValue = preferences.getInt("waterValue", 0);
-  bool isCalibrated = preferences.getBool("isCalibrated", false);
+  isCalibrated = preferences.getBool("isCalibrated", false);
+  for (int i = 0; i < 3; i++) {
+    airValues[i] = preferences.getInt(("air" + String(i)).c_str(), 4095);
+    waterValues[i] = preferences.getInt(("water" + String(i)).c_str(), 0);
+  }
 
   if (!isCalibrated) {
-    Serial.println("Starting calibration. Insert sensor into dry and wet soil alternately.");
+    Serial.println("Calibration mode: insert sensors into dry/wet soil alternately.");
     startTime = millis();
   } else {
-    Serial.println("Calibration values loaded.");
+    Serial.println("Loaded calibration values.");
   }
 
   setup_wifi();
 
   secureClient.setCACert(root_ca);
   client.setServer(mqttServer, mqttPort);
+  client.setCallback(mqttCallback);
 }
 
 void loop() {
-  bool isCalibrated = preferences.getBool("isCalibrated", false);
-
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
 
+  // Auto-calibration logic
   if (!isCalibrated && millis() - startTime < calibrationPeriod) {
-    int sensorValue = analogRead(moistureSensorPin);
-    waterValue = max(waterValue, sensorValue);
-    airValue = min(airValue, sensorValue);
-    Serial.println("Calibrating: Air = " + String(airValue) + ", Water = " + String(waterValue));
+    for (int i = 0; i < 3; i++) {
+      int value = analogRead(moisturePins[i]);
+      waterValues[i] = max(waterValues[i], value);
+      airValues[i] = min(airValues[i], value);
+    }
+    Serial.println("Calibrating...");
   } else if (!isCalibrated) {
-    preferences.putInt("airValue", airValue);
-    preferences.putInt("waterValue", waterValue);
+    for (int i = 0; i < 3; i++) {
+      preferences.putInt(("air" + String(i)).c_str(), airValues[i]);
+      preferences.putInt(("water" + String(i)).c_str(), waterValues[i]);
+    }
     preferences.putBool("isCalibrated", true);
+    isCalibrated = true;
     Serial.println("Calibration complete.");
   }
 
-  if (isCalibrated) {
-    int sensorValue = analogRead(moistureSensorPin);
-    int moisturePercent = waterValue == airValue ? 0 : map(sensorValue, airValue, waterValue, 100, 0);
-    moisturePercent = constrain(moisturePercent, 0, 100);
-    Serial.println("Soil Moisture: " + String(moisturePercent) + "%");
-    Serial.println("Raw Value: "+ String(sensorValue));
-
-    char msg[50];
-    sprintf(msg, "%d", sensorValue);//soll moisture percent sein
-    client.publish(mqttTopic, msg);
-
-    delay(10);  // Ensure message is sent
-    esp_sleep_enable_timer_wakeup(sleepTimeSeconds * 1000000);
-    esp_deep_sleep_start();
+  // Periodic data publish
+  if (millis() - lastPublishTime >= publishInterval && isCalibrated) {
+    publishSensorData();
+    lastPublishTime = millis();
   }
+  // Pump autoshutoff
+  for (int i = 0; i < 3; i++) {
+  if (pumpActive[i] && millis() - pumpStartTimes[i] >= pumpDuration) {
+    digitalWrite(pumpPins[i], LOW);
+    pumpActive[i] = false;
+    Serial.printf("Pump %d OFF (timer ended)\n", i + 1);
+  }
+}
+
+}
+
+void publishSensorData() {
+  StaticJsonDocument<200> doc;
+
+  for (int i = 0; i < 3; i++) {
+    int value = analogRead(moisturePins[i]);
+    int percent = map(value, airValues[i], waterValues[i], 100, 0);
+    percent = constrain(percent, 0, 100);
+
+    doc["sensor" + String(i + 1)] = percent;
+
+    Serial.printf("Sensor %d: %d%% (Raw: %d)\n", i + 1, percent, value);
+  }
+
+  char buffer[256];
+  size_t len = serializeJson(doc, buffer);
+  client.publish(mqttPubTopic, buffer, len);
+}
+
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("MQTT message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+
+  payload[length] = '\0'; // Null-terminate
+  String msg = String((char*)payload);
+  Serial.println(msg);
+
+  StaticJsonDocument<128> doc;
+  DeserializationError error = deserializeJson(doc, payload);
+
+  if (error) {
+    Serial.println("Failed to parse control JSON");
+    return;
+  }
+
+  for (int i = 0; i < 3; i++) {
+  if (doc["pump"][i]) {
+    digitalWrite(pumpPins[i], HIGH);
+    pumpStartTimes[i] = millis();
+    pumpActive[i] = true;
+    Serial.printf("Pump %d ON (auto-off in 15s)\n", i + 1);
+  }
+}
+
 }
 
 void setup_wifi() {
   Serial.println("Connecting to WiFi...");
   WiFi.begin(ssid, password);
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("WiFi connected.");
+
+  Serial.println("\nWiFi connected. IP address: " + WiFi.localIP().toString());
 }
 
 void reconnect() {
   while (!client.connected()) {
-    Serial.print("Connecting to MQTT...");
-    if (client.connect("mynameisjeff", mqttUser, mqttPassword)) {
+    Serial.print("Connecting to MQTT... ");
+    if (client.connect("esp32Client", mqttUser, mqttPassword)) {
       Serial.println("connected.");
+      client.subscribe(mqttSubTopic);
+      Serial.printf("Subscribed to %s\n", mqttSubTopic);
     } else {
-      Serial.print("Failed, rc=");
+      Serial.print("Failed (rc=");
       Serial.print(client.state());
-      Serial.println(" Retrying in 5s...");
+      Serial.println("). Retrying in 5 seconds...");
       delay(5000);
     }
   }
