@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -39,6 +40,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final sensorData = context.watch<SensorDataProvider>().sensorData;
+    final isConnected = context.watch<SensorDataProvider>().isConnected;
+
 
     return CustomScaffold(
       title: 'Hauptmenü',
@@ -47,14 +50,33 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         children: [
           const Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              'Automatische Balkonpflanzen-\nBewässerung',
+            child: Text('Automatische Balkonpflanzen-\nBewässerung',
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                isConnected ? Icons.check_circle : Icons.cancel,
+                color: isConnected ? Colors.green : Colors.red,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isConnected ? 'Verbunden mit MQTT' : 'Nicht verbunden',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isConnected ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          
           const SizedBox(height: 30),
 
           // Sensor Page Slider
@@ -153,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     if (level >= 70) {
       iconColor = Colors.green;
-      statusText = "Wasserstand: Hoch";
+      statusText = "Wasserstand: In Ordnung";
     } else if (level >= 30) {
       iconColor = Colors.orange;
       statusText = "Wasserstand: Mittel";

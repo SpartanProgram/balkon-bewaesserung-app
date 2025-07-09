@@ -35,15 +35,24 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
       return;
     }
 
-    context.read<SensorDataProvider>().connectToMqtt(
+    final provider = context.read<SensorDataProvider>();
+
+    provider.connectToMqtt(
       broker: broker,
       port: port,
-      username: username,
-      password: password,
+      username: username.isEmpty ? null : username,
+      password: password.isEmpty ? null : password,
       useTLS: _useTLS,
       onConnected: () {
+        provider.saveBrokerCredentials(
+          broker: broker,
+          port: port,
+          username: username.isEmpty ? null : username,
+          password: password.isEmpty ? null : password,
+        );
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Erfolgreich verbunden")),
+          const SnackBar(content: Text("✅ Erfolgreich verbunden und gespeichert")),
         );
       },
     );

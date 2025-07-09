@@ -15,6 +15,8 @@ class SensorDataProvider extends ChangeNotifier {
   final MqttService mqtt = MqttService();
 
   bool _isConnected = false;
+  bool get isConnected => _isConnected;
+
 
   List<Map<String, String>> get sensorData => _sensorData;
   List<Map<String, dynamic>> get history => _history;
@@ -43,7 +45,7 @@ class SensorDataProvider extends ChangeNotifier {
     );
   }
 
-  /// 👀 Reconnect if disconnected
+  /// Reconnect if disconnected
   void reconnectIfNeeded() {
     if (!_isConnected) {
       connectToMqtt(
@@ -116,6 +118,38 @@ class SensorDataProvider extends ChangeNotifier {
       debugPrint("❌ Sensor JSON parse error: $e");
     }
   }
+
+      // Save broker credentials
+      Future<void> saveBrokerCredentials({
+        required String broker,
+        required int port,
+        String? username,
+        String? password,
+      }) async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('mqtt_broker', broker);
+        await prefs.setInt('mqtt_port', port);
+        if (username != null) await prefs.setString('mqtt_user', username);
+        if (password != null) await prefs.setString('mqtt_pass', password);
+      }
+
+      // Load broker credentials
+      Future<void> loadAndConnectFromPrefs() async {
+        final prefs = await SharedPreferences.getInstance();
+        final broker = prefs.getString('mqtt_broker');
+        final port = prefs.getInt('mqtt_port');
+        final username = prefs.getString('mqtt_user');
+        final password = prefs.getString('mqtt_pass');
+
+        if (broker != null && port != null) {
+          connectToMqtt(
+            broker: broker,
+            port: port,
+            username: username,
+            password: password,
+          );
+        }
+      }
 
   Future<void> _saveHistoryToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
