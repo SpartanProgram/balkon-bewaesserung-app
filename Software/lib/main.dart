@@ -12,6 +12,13 @@ void main() async {
   final provider = SensorDataProvider();
   await provider.loadHistoryFromPrefs();
 
+  // 🔌 Automatically connect to MQTT on app startup
+  provider.connectToMqtt(
+    broker: 'your.broker.ip', // ← replace with your actual broker IP or hostname
+    port: 1883,
+    // Optional: username, password, useTLS
+  );
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => provider,
