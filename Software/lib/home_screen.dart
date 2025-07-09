@@ -76,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 30),
 
           // Sensor Page Slider
@@ -105,6 +105,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!),
                     const SizedBox(height: 16),
                     _infoCard("Letzte Bewässerung", sensor["lastWatered"]!),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[700],
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      onPressed: () {
+                        HapticFeedback.heavyImpact();
+                        context.read<SensorDataProvider>().triggerWatering(sensorId: index); // 👈 update trigger
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("🚿 Sensor ${index + 1} bewässert")),
+                        );
+                      },
+                      child: Text(
+                        'Sensor ${index + 1} bewässern',
+                        style: const TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
                   ],
                 );
               },

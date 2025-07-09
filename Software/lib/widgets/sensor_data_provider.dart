@@ -56,18 +56,43 @@ class SensorDataProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> triggerWatering() async {
-    mqtt.publish('esp32/watering', 'start');
+Future<void> triggerWatering({int? sensorId}) async {
+  if (sensorId != null) {
+    // Trigger a specific sensor pump
+    mqtt.publish('esp32/watering/$sensorId', 'start');
 
     _history.add({
       'timestamp': DateTime.now(),
       'type': 'watering',
-      'message': 'Manuelle Bewässerung gestartet',
+      'sensorId': sensorId,
+      'message': 'Manuelle Bewässerung Sensor ${sensorId + 1}',
     });
 
-    await _saveHistoryToPrefs();
-    notifyListeners();
+    // Update sensor's lastWatered field
+    _sensorData[sensorId]["lastWatered"] = _formattedNow();
+  } else {
+    // Trigger all 3 pumps
+    for (int i = 0; i < 3; i++) {
+      mqtt.publish('esp32/watering/$i', 'start');
+      _sensorData[i]["lastWatered"] = _formattedNow();
+    }
+
+    _history.add({
+      'timestamp': DateTime.now(),
+      'type': 'watering',
+      'sensorId': -1,
+      'message': 'Alle Sensoren bewässert',
+    });
   }
+
+  await _saveHistoryToPrefs();
+  notifyListeners();
+}
+
+String _formattedNow() {
+  final now = DateTime.now();
+  return "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} Uhr";
+}
 
   Future<void> updateSensorFromJson(String jsonString) async {
     debugPrint("📥 Received MQTT: $jsonString");
