@@ -26,7 +26,7 @@ class SensorDataProvider extends ChangeNotifier {
     required int port,
     String? username,
     String? password,
-    bool useTLS = false,
+    bool useTLS = true,
     void Function()? onConnected,
   }) {
     mqtt.onMessage = updateSensorFromJson;

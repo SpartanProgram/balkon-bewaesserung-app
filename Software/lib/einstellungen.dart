@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class EinstellungenScreen extends StatefulWidget {
   const EinstellungenScreen({super.key});
@@ -16,11 +18,29 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
   bool _useTLS = false;
   bool _passwordVisible = false;
 
-
   final TextEditingController _brokerController = TextEditingController();
   final TextEditingController _portController = TextEditingController(text: '8883');
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _loadSavedCredentialsIntoForm() async {
+    final prefs = await SharedPreferences.getInstance();
+    final broker = prefs.getString('mqtt_broker');
+    final port = prefs.getInt('mqtt_port');
+    final username = prefs.getString('mqtt_user');
+    final password = prefs.getString('mqtt_pass');
+
+    setState(() {
+      if (broker != null) _brokerController.text = broker;
+      if (port != null) _portController.text = port.toString();
+      if (username != null) _usernameController.text = username;
+      if (password != null) _passwordController.text = password;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("🔐 Gespeicherte Verbindung geladen")),
+    );
+  }
 
   void _connectToBroker() {
     final broker = _brokerController.text.trim();
@@ -111,10 +131,20 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "MQTT Verbindung",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "MQTT Verbindung",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.lock, size: 24),
+                        tooltip: 'Gespeicherte Verbindung laden',
+                        onPressed: _loadSavedCredentialsIntoForm,
+                      ),
+                    ],
+                  ),                                   
                   const SizedBox(height: 16),
                   TextField(
                     controller: _brokerController,
@@ -191,9 +221,9 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                         );
                       },
                       child: const Text("Noch kein Broker? Jetzt erstellen"),
-                    ),
-                  )
-                ],
+                    ),                   
+                  )                 
+                ],               
               ),
             ),
           ],
