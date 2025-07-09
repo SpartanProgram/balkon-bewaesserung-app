@@ -11,9 +11,30 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   int _currentSensorIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final provider = context.read<SensorDataProvider>();
+      provider.reconnectIfNeeded(); // This assumes you have reconnect logic in the provider
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
                     _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!),
                     const SizedBox(height: 16),
-                    _infoCard("Wasserstand", sensor["waterLevel"]!),
-                    const SizedBox(height: 16),
                     _infoCard("Letzte Bewässerung", sensor["lastWatered"]!),
                   ],
                 );
@@ -70,6 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
+          if (sensorData.isNotEmpty)
+            _waterLevelIndicator(sensorData[0]["waterLevel"]!),
           const SizedBox(height: 8),
 
           // Dot Indicator
@@ -93,7 +114,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 24),
 
-          // Button
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -106,9 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onPressed: () {
                 HapticFeedback.heavyImpact();
-
-                final mqtt = context.read<SensorDataProvider>();
-                mqtt.triggerWatering();
+                context.read<SensorDataProvider>().triggerWatering();
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("🚿 Bewässerung gestartet")),
@@ -121,6 +139,47 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _waterLevelIndicator(String waterLevelStr) {
+    int level = int.tryParse(waterLevelStr.replaceAll('%', '')) ?? -1;
+
+    IconData icon = Icons.water_drop;
+    Color iconColor;
+    String statusText;
+
+    if (level >= 70) {
+      iconColor = Colors.green;
+      statusText = "Wasserstand: Hoch";
+    } else if (level >= 30) {
+      iconColor = Colors.orange;
+      statusText = "Wasserstand: Mittel";
+    } else if (level >= 0) {
+      iconColor = Colors.red;
+      statusText = "Wasserstand: Niedrig";
+    } else {
+      iconColor = Colors.grey;
+      statusText = "Wasserstand: --";
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FDEB),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 28),
+          const SizedBox(width: 12),
+          Text(
+            statusText,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
