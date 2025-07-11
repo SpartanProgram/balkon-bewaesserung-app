@@ -133,7 +133,7 @@ class SensorDataProvider extends ChangeNotifier {
 
               if (notificationsEnabled) {
                 await NotificationService.show(
-                  title: '⚠️ Niedrige Bodenfeuchtigkeit',
+                  title: '🌱 Niedrige Bodenfeuchtigkeit',
                   body: 'Sensor ${i + 1}: nur $moisture%',
                 );
               }
@@ -162,7 +162,7 @@ class SensorDataProvider extends ChangeNotifier {
 
           if (notificationsEnabled) {
             await NotificationService.show(
-              title: '🚨 Niedriger Wasserstand',
+              title: '💧 Niedriger Wasserstand',
               body: 'Wasserstand: $waterLevel%',);
           }
         }
