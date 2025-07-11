@@ -284,4 +284,11 @@ class SensorDataProvider extends ChangeNotifier {
     _scheduleTimer?.cancel();
     super.dispose();
   }
+
+    void disconnectFromMqtt() {
+    mqtt.disconnect(); // Make sure this is implemented in your MqttService
+    _isConnected = false;
+    notifyListeners();
+  }
+
 }

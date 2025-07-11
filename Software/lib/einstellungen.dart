@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 
 class EinstellungenScreen extends StatefulWidget {
   const EinstellungenScreen({super.key});
@@ -206,24 +206,47 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _connectToBroker,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                    ),
-                    child: const Text("Verbinden"),
+                ElevatedButton(
+                  onPressed: _connectToBroker,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
                   ),
+                  child: const Text("Verbinden"),
+                ),
+
+                // 🔽 Disconnect button
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    final provider = context.read<SensorDataProvider>();
+                    provider.disconnectFromMqtt();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("🔌 Verbindung getrennt")),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text("Verbindung trennen"),
+                ),
                   const SizedBox(height: 24),
                   Center(
                     child: TextButton(
-                      onPressed: () {
-                        // Optional external link or provider info
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Externe MQTT-Provider öffnen...")),
-                        );
+                      onPressed: () async {
+                        const url = 'https://www.hivemq.com/mqtt-cloud-broker/'; // or your preferred broker
+                        if (await canLaunchUrl(Uri.parse(url))) {
+                          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("❌ Konnte den Link nicht öffnen")),
+                          );
+                        }
                       },
                       child: const Text("Noch kein Broker? Jetzt erstellen"),
-                    ),                   
+                    ),                
                   )                 
                 ],               
               ),
