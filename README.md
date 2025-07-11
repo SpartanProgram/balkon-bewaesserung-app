@@ -13,7 +13,7 @@ Dies ist eine Flutter-App zur Überwachung und Steuerung eines automatisierten B
 - Verlauf (Verlaufsanzeige von Bewässerungs- und Sensordaten)
 - Push-Benachrichtigungen:
   - 🚿 Automatische Bewässerung
-  - ⚠️ Niedrige Bodenfeuchtigkeit
+  - 🌱 Niedrige Bodenfeuchtigkeit
   - 💧 Niedriger Wasserstand
 - Verbindung zu MQTT-Broker mit TLS-Unterstützung
 - Speicherung der Einstellungen lokal (Shared Preferences)
@@ -33,30 +33,32 @@ Dies ist eine Flutter-App zur Überwachung und Steuerung eines automatisierten B
 ```bash
 flutter pub get
 flutter run
+```
 
+## ⚙️ MQTT Setup
 
-⚙️ MQTT Setup
 Topic (Empfang): pflanzen/pflanze01
 
 Topic (Senden): pflanzen/pflanze01/control
 
 Payload Beispiel (ESP → App):
-
+```bash
 {
   "sensor1": 55,
   "sensor2": 43,
   "sensor3": 87,
   "sensor4": 100
 }
-
+```
 Payload Beispiel (App → ESP):
-
+```bash
 {
   "pump": [true, false, true]
 }
+```
 
+##🔐 Berechtigungen
 
-🔐 Berechtigungen
 POST_NOTIFICATIONS (Android)
 
 Lokale Benachrichtigungen (iOS & Android)
