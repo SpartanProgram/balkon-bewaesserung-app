@@ -230,11 +230,11 @@ class SensorDataProvider extends ChangeNotifier {
   }
 
   void _startScheduleTimer() {
-    debugPrint("🕓 Starting schedule timer...");
     _scheduleTimer?.cancel();
+    
     _scheduleTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       final now = TimeOfDay.now();
-      debugPrint("🕐 Checking schedule: now=${now.hour}:${now.minute} | target=${_scheduledTime.hour}:${_scheduledTime.minute}");
+      debugPrint("🕐 Checking schedule: ${now.hour}:${now.minute}");
 
       if (_scheduleActivated &&
           now.hour == _scheduledTime.hour &&
