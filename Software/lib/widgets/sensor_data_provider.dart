@@ -103,7 +103,7 @@ class SensorDataProvider extends ChangeNotifier {
     );
   }
 
-    mqtt.publish('esp32/watering', jsonEncode({"pump": pumpStates}));
+    mqtt.publish('pflanzen/pflanze01/control', jsonEncode({"pump": pumpStates}));
     await _saveHistoryToPrefs();
     notifyListeners();
   }

@@ -5,6 +5,7 @@ import 'widgets/sensor_data_provider.dart';
 import 'services/notification_service.dart';
 
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.init();
