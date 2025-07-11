@@ -1,30 +1,41 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_service.dart';
+import '../services/notification_service.dart';
+
+
 
 class SensorDataProvider extends ChangeNotifier {
   final List<Map<String, String>> _sensorData = List.generate(3, (index) => {
-    "sensor": "Sensor ${index + 1}",
-    "moisture": "--",
-    "waterLevel": "--",
-    "lastWatered": "--",
-  });
+        "sensor": "Sensor ${index + 1}",
+        "moisture": "--",
+        "waterLevel": "--",
+        "lastWatered": "--",
+      });
 
   final List<Map<String, dynamic>> _history = [];
-
   final MqttService mqtt = MqttService();
+
+  bool _isConnected = false;
+  bool get isConnected => _isConnected;
+
+  bool _scheduleActivated = false;
+  TimeOfDay _scheduledTime = const TimeOfDay(hour: 8, minute: 0);
+  Timer? _scheduleTimer;
 
   List<Map<String, String>> get sensorData => _sensorData;
   List<Map<String, dynamic>> get history => _history;
+  bool get isScheduleActivated => _scheduleActivated;
+  TimeOfDay get scheduledTime => _scheduledTime;
 
-  // 🔌 Connect to broker
   void connectToMqtt({
     required String broker,
     required int port,
     String? username,
     String? password,
-    bool useTLS = false,
+    bool useTLS = true,
     void Function()? onConnected,
   }) {
     mqtt.onMessage = updateSensorFromJson;
@@ -36,86 +47,134 @@ class SensorDataProvider extends ChangeNotifier {
       password: password,
       useTLS: useTLS,
       onConnected: () {
-        mqtt.subscribe('sensor/data');
-        if (onConnected != null) onConnected();
+        _isConnected = true;
+        mqtt.subscribe('pflanzen/pflanze01');
+        onConnected?.call();
+        notifyListeners();
       },
     );
   }
 
-  // 🚿 Manual watering command
-  Future<void> triggerWatering() async {
-    mqtt.publish('esp32/watering', 'start');
+  void reconnectIfNeeded() {
+    if (!_isConnected) {
+      connectToMqtt(broker: 'your_broker_ip_or_hostname', port: 1883);
+    }
+  }
 
-    _history.add({
-      'timestamp': DateTime.now(),
-      'type': 'watering',
-      'message': 'Manuelle Bewässerung gestartet',
-    });
+  Future<void> triggerWatering({int? sensorId, String source = 'manual'}) async {
+    debugPrint("🚿 triggerWatering called with source=$source");
 
+    List<bool> pumpStates = List.filled(3, false);
+
+    if (sensorId != null) {
+      pumpStates[sensorId] = true;
+      _sensorData[sensorId]["lastWatered"] = _formattedNow();
+
+      _history.add({
+        'timestamp': DateTime.now(),
+        'type': 'watering',
+        'sensorId': sensorId,
+        'message': source == 'schedule'
+            ? 'Zeitplan: Sensor ${sensorId + 1} automatisch bewässert'
+            : 'Manuelle Bewässerung Sensor ${sensorId + 1}',
+      });
+    } else {
+      pumpStates = List.filled(3, true);
+      for (int i = 0; i < 3; i++) {
+        _sensorData[i]["lastWatered"] = _formattedNow();
+      }
+
+      _history.add({
+        'timestamp': DateTime.now(),
+        'type': 'watering',
+        'sensorId': -1,
+        'message': source == 'schedule'
+            ? 'Zeitplan: Alle Sensoren automatisch bewässert'
+            : 'Alle Sensoren manuell bewässert',
+      });
+    }
+    final prefs = await SharedPreferences.getInstance();
+  final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+
+  if (notificationsEnabled && source == 'schedule') {
+    await NotificationService.show(
+      title: '🌱 Automatische Bewässerung',
+      body: 'Sensoren wurden gemäß Zeitplan bewässert',
+    );
+  }
+
+    mqtt.publish('pflanzen/pflanze01/control', jsonEncode({"pump": pumpStates}));
     await _saveHistoryToPrefs();
     notifyListeners();
   }
 
-  // 🌱 Sensor update from MQTT
-    Future<void> updateSensorFromJson(String jsonString) async {
+  Future<void> updateSensorFromJson(String jsonString) async {
+    debugPrint("📥 Received MQTT: $jsonString");
 
-      debugPrint("📥 Received MQTT: $jsonString");
+    try {
+      final data = Map<String, dynamic>.from(json.decode(jsonString));
 
-      try {
-        final data = Map<String, dynamic>.from(json.decode(jsonString));
-        final int? id = data["id"];
+      for (int i = 0; i < 3; i++) {
+        final key = "sensor${i + 1}";
+        if (data.containsKey(key)) {
+          final moisture = data[key];
+          if (moisture is int || moisture is double) {
+            _sensorData[i]["moisture"] = "$moisture%";
 
-        if (id != null && id >= 0 && id < _sensorData.length) {
-          // Only update values if they exist
-          if (data.containsKey("moisture")) {
-            _sensorData[id]["moisture"] = "${data["moisture"]}%";
+            if (moisture <= 20) {
+              _history.add({
+                'timestamp': DateTime.now(),
+                'type': 'sensor',
+                'sensorId': i,
+                'event': 'Sensor ${i + 1}: $moisture% Feuchtigkeit',
+              });
+              final prefs = await SharedPreferences.getInstance();
+              final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+
+              if (notificationsEnabled) {
+                await NotificationService.show(
+                  title: '🌱 Niedrige Bodenfeuchtigkeit',
+                  body: 'Sensor ${i + 1}: nur $moisture%',
+                );
+              }
+            }
           }
-          if (data.containsKey("waterLevel")) {
-            _sensorData[id]["waterLevel"] = "${data["waterLevel"]}%";
-          }
-          if (data.containsKey("lastWatered")) {
-            _sensorData[id]["lastWatered"] = data["lastWatered"];
-          }
-
-          // 🚨 Add threshold entries
-          if (data["moisture"] != null && data["moisture"] <= 20) {
-            _history.add({
-              'timestamp': DateTime.now(),
-              'type': 'sensor',
-              'sensorId': id,
-              'event': 'Sensor ${id + 1}: ${data["moisture"]}% Feuchtigkeit',
-            });
-          }
-
-          if (data["waterLevel"] != null && data["waterLevel"] <= 20) {
-            _history.add({
-              'timestamp': DateTime.now(),
-              'type': 'sensor',
-              'sensorId': id,
-              'event': 'Sensor ${id + 1}: ${data["waterLevel"]}% Wasserstand',
-            });
-          }
-
-          // ✅ Add custom event
-          if (data.containsKey("event")) {
-            _history.add({
-              'timestamp': DateTime.now(),
-              'type': 'sensor',
-              'sensorId': id,
-              'event': data["event"],
-            });
-          }
-
-          await _saveHistoryToPrefs();
-          notifyListeners();
         }
-      } catch (e) {
-        debugPrint("❌ Sensor JSON parse error: $e");
       }
+
+      if (data.containsKey("sensor4")) {
+        final waterLevel = data["sensor4"];
+        final waterLevelStr = "$waterLevel%";
+
+        for (int i = 0; i < _sensorData.length; i++) {
+          _sensorData[i]["waterLevel"] = waterLevelStr;
+        }
+
+        if (waterLevel <= 20) {
+          _history.add({
+            'timestamp': DateTime.now(),
+            'type': 'sensor',
+            'sensorId': -1,
+            'event': 'Wasserstand niedrig: $waterLevel%',
+          });
+          final prefs = await SharedPreferences.getInstance();
+          final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+
+          if (notificationsEnabled) {
+            await NotificationService.show(
+              title: '💧 Niedriger Wasserstand',
+              body: 'Wasserstand: $waterLevel%',);
+          }
+        }
+      }
+
+      await _saveHistoryToPrefs();
+      notifyListeners();
+    } catch (e) {
+      debugPrint("❌ Sensor JSON parse error: $e");
     }
+  }
 
-
-  // 💾 Save to SharedPreferences
   Future<void> _saveHistoryToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(_history.map((entry) {
@@ -127,22 +186,109 @@ class SensorDataProvider extends ChangeNotifier {
     await prefs.setString('sensor_history', encoded);
   }
 
-  // 🔁 Load from SharedPreferences on app start
   Future<void> loadHistoryFromPrefs() async {
-  final prefs = await SharedPreferences.getInstance();
-  final encoded = prefs.getString('sensor_history');
-  if (encoded != null) {
-    final List<dynamic> decoded = jsonDecode(encoded);
-    _history.clear();
-    _history.addAll(decoded.map((entry) {
-      final map = Map<String, dynamic>.from(entry);
-      return {
-        ...map,
-        'timestamp': DateTime.parse(map['timestamp']),
-      };
-    }).toList());
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = prefs.getString('sensor_history');
+    if (encoded != null) {
+      final List<dynamic> decoded = jsonDecode(encoded);
+      _history.clear();
+      _history.addAll(decoded.map((entry) {
+        final map = Map<String, dynamic>.from(entry);
+        return {
+          ...map,
+          'timestamp': DateTime.parse(map['timestamp']),
+        };
+      }).toList());
+      notifyListeners();
+    }
+  }
+
+  Future<void> saveBrokerCredentials({
+    required String broker,
+    required int port,
+    String? username,
+    String? password,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mqtt_broker', broker);
+    await prefs.setInt('mqtt_port', port);
+    if (username != null) await prefs.setString('mqtt_user', username);
+    if (password != null) await prefs.setString('mqtt_pass', password);
+  }
+
+  Future<void> loadAndConnectFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final broker = prefs.getString('mqtt_broker');
+    final port = prefs.getInt('mqtt_port');
+    final username = prefs.getString('mqtt_user');
+    final password = prefs.getString('mqtt_pass');
+
+    if (broker != null && port != null) {
+      connectToMqtt(
+        broker: broker,
+        port: port,
+        username: username,
+        password: password,
+      );
+    }
+  }
+
+  Future<void> loadScheduleFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    _scheduleActivated = prefs.getBool('schedule_active') ?? false;
+    final hour = prefs.getInt('schedule_hour') ?? 8;
+    final minute = prefs.getInt('schedule_minute') ?? 0;
+    _scheduledTime = TimeOfDay(hour: hour, minute: minute);
+    _startScheduleTimer();
     notifyListeners();
   }
-}
+
+  Future<void> saveScheduleToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('schedule_active', _scheduleActivated);
+    await prefs.setInt('schedule_hour', _scheduledTime.hour);
+    await prefs.setInt('schedule_minute', _scheduledTime.minute);
+  }
+
+  void updateSchedule({required bool isActive, required TimeOfDay time}) {
+    _scheduleActivated = isActive;
+    _scheduledTime = time;
+    saveScheduleToPrefs();
+    _startScheduleTimer();
+    notifyListeners();
+  }
+
+  void _startScheduleTimer() {
+    _scheduleTimer?.cancel();
+
+    _scheduleTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      final now = TimeOfDay.now();
+      debugPrint("🕐 Checking schedule: ${now.hour}:${now.minute}");
+
+      if (_scheduleActivated &&
+          now.hour == _scheduledTime.hour &&
+          now.minute == _scheduledTime.minute) {
+        debugPrint("🚿 Zeitplan ausgelöst: automatische Bewässerung");
+        triggerWatering(source: 'schedule');
+      }
+    });
+  }
+
+  String _formattedNow() {
+    final now = DateTime.now();
+    return "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} Uhr";
+  }
+
+  @override
+  void dispose() {
+    _scheduleTimer?.cancel();
+    super.dispose();
+  }
+
+    void disconnectFromMqtt() {
+    mqtt.disconnect(); // Make sure this is implemented in your MqttService
+    _isConnected = false;
+    notifyListeners();
+  }
 
 }
