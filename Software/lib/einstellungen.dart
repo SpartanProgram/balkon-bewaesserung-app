@@ -112,11 +112,13 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                     value: _benachrichtigungenAktiv,
                     activeColor: Colors.white,
                     activeTrackColor: Colors.green,
-                    onChanged: (value) {
+                    onChanged: (value)  async{
                       HapticFeedback.mediumImpact();
                       setState(() {
                         _benachrichtigungenAktiv = value;
                       });
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('notifications_enabled', value);
                     },
                   ),
                 ],
@@ -230,5 +232,22 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
         ),
       ),
     );
+  }
+
+    @override
+  void initState() {
+    super.initState();
+    _loadNotificationPref();
+  }
+
+  void _loadNotificationPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('notifications_enabled')) {
+      // First time: set default to false
+      await prefs.setBool('notifications_enabled', false);
+    }
+    setState(() {
+      _benachrichtigungenAktiv = prefs.getBool('notifications_enabled') ?? false;
+    });
   }
 }

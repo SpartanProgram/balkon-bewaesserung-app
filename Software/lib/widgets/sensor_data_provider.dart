@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_service.dart';
+import '../services/notification_service.dart';
+
+
 
 class SensorDataProvider extends ChangeNotifier {
   final List<Map<String, String>> _sensorData = List.generate(3, (index) => {
@@ -90,6 +93,15 @@ class SensorDataProvider extends ChangeNotifier {
             : 'Alle Sensoren manuell bewässert',
       });
     }
+    final prefs = await SharedPreferences.getInstance();
+  final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+
+  if (notificationsEnabled && source == 'schedule') {
+    await NotificationService.show(
+      title: '🌱 Automatische Bewässerung',
+      body: 'Sensoren wurden gemäß Zeitplan bewässert',
+    );
+  }
 
     mqtt.publish('esp32/watering', jsonEncode({"pump": pumpStates}));
     await _saveHistoryToPrefs();
@@ -116,6 +128,15 @@ class SensorDataProvider extends ChangeNotifier {
                 'sensorId': i,
                 'event': 'Sensor ${i + 1}: $moisture% Feuchtigkeit',
               });
+              final prefs = await SharedPreferences.getInstance();
+              final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+
+              if (notificationsEnabled) {
+                await NotificationService.show(
+                  title: '⚠️ Niedrige Bodenfeuchtigkeit',
+                  body: 'Sensor ${i + 1}: nur $moisture%',
+                );
+              }
             }
           }
         }
@@ -136,6 +157,14 @@ class SensorDataProvider extends ChangeNotifier {
             'sensorId': -1,
             'event': 'Wasserstand niedrig: $waterLevel%',
           });
+          final prefs = await SharedPreferences.getInstance();
+          final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+
+          if (notificationsEnabled) {
+            await NotificationService.show(
+              title: '🚨 Niedriger Wasserstand',
+              body: 'Wasserstand: $waterLevel%',);
+          }
         }
       }
 
@@ -231,7 +260,7 @@ class SensorDataProvider extends ChangeNotifier {
 
   void _startScheduleTimer() {
     _scheduleTimer?.cancel();
-    
+
     _scheduleTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       final now = TimeOfDay.now();
       debugPrint("🕐 Checking schedule: ${now.hour}:${now.minute}");
