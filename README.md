@@ -57,13 +57,14 @@ Payload Beispiel (App → ESP):
 }
 ```
 
-##🔐 Berechtigungen
+## 🔐 Berechtigungen
 
 POST_NOTIFICATIONS (Android)
 
 Lokale Benachrichtigungen (iOS & Android)
 
-🛠 Verwendete Technologien
+## 🛠 Verwendete Technologien
+
 Flutter
 
 Provider
@@ -74,11 +75,13 @@ shared_preferences
 
 mqtt_client
 
-👥 Team
+## 👥 Team
+
 Zulfahmi Nur Vagala
 Dzaid Abiyyu Siregar
 Johannes Berg
 
 
-📝 Lizenz
+## 📝 Lizenz
+
 Dieses Projekt ist Teil des Fachprojekts an der HTW Berlin (SoSe 2025). Die Nutzung ist nur zu Studienzwecken gestattet.
