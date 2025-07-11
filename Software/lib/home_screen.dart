@@ -91,44 +91,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               },
               itemBuilder: (context, index) {
                 final sensor = sensorData[index];
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      sensor["sensor"]!,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.normal,
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        sensor["sensor"]!,
+                        style: const TextStyle(fontSize: 22),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!),
-                    const SizedBox(height: 16),
-                    _infoCard("Letzte Bewässerung", sensor["lastWatered"]!),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                      const SizedBox(height: 16),
+                      _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!),
+                      const SizedBox(height: 16),
+                      _infoCard("Letzte Bewässerung", sensor["lastWatered"]!),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<SensorDataProvider>().triggerWatering(sensorId: index);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("🚿 Sensor ${index + 1} bewässert")),
+                          );
+                        },
+                        child: const Text("Bewässern"),
                       ),
-                      onPressed: () {
-                        HapticFeedback.heavyImpact();
-                        context.read<SensorDataProvider>().triggerWatering(sensorId: index); // 👈 update trigger
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("🚿 Sensor ${index + 1} bewässert")),
-                        );
-                      },
-                      child: Text(
-                        'Sensor ${index + 1} bewässern',
-                        style: const TextStyle(fontSize: 16, color: Colors.white),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(sensorData.length, (dotIndex) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              _currentSensorIndex == dotIndex
+                                  ? Icons.circle
+                                  : Icons.circle_outlined,
+                              size: 10,
+                              color: _currentSensorIndex == dotIndex
+                                  ? Colors.black
+                                  : Colors.grey,
+                            ),
+                          );
+                        }),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
-              },
+              }
             ),
           ),
 
@@ -137,23 +145,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const SizedBox(height: 8),
 
           // Dot Indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(sensorData.length, (index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(
-                  _currentSensorIndex == index
-                      ? Icons.circle
-                      : Icons.circle_outlined,
-                  size: 12,
-                  color: _currentSensorIndex == index
-                      ? Colors.black
-                      : Colors.grey,
-                ),
-              );
-            }),
-          ),
 
           const SizedBox(height: 24),
 
@@ -176,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 );
               },
               child: const Text(
-                'Jetzt bewässern',
+                'Alle bewässern',
                 style: TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),

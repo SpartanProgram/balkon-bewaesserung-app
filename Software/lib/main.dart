@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
-import 'widgets/sensor_data_provider.dart';
-import 'home_screen.dart';
 import 'package:provider/provider.dart';
-
-
-
+import 'home_screen.dart';
+import 'widgets/sensor_data_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final provider = SensorDataProvider();
   await provider.loadHistoryFromPrefs();
-  await provider.loadAndConnectFromPrefs();
+  await provider.loadScheduleFromPrefs(); 
+  await provider.loadAndConnectFromPrefs(); 
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => provider,
+    ChangeNotifierProvider.value(
+      value: provider,
       child: const MyApp(),
     ),
   );
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

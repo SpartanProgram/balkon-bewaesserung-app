@@ -1,15 +1,16 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_service.dart';
 
 class SensorDataProvider extends ChangeNotifier {
   final List<Map<String, String>> _sensorData = List.generate(3, (index) => {
-    "sensor": "Sensor ${index + 1}",
-    "moisture": "--",
-    "waterLevel": "--",
-    "lastWatered": "--",
-  });
+        "sensor": "Sensor ${index + 1}",
+        "moisture": "--",
+        "waterLevel": "--",
+        "lastWatered": "--",
+      });
 
   final List<Map<String, dynamic>> _history = [];
   final MqttService mqtt = MqttService();
@@ -17,9 +18,14 @@ class SensorDataProvider extends ChangeNotifier {
   bool _isConnected = false;
   bool get isConnected => _isConnected;
 
+  bool _scheduleActivated = false;
+  TimeOfDay _scheduledTime = const TimeOfDay(hour: 8, minute: 0);
+  Timer? _scheduleTimer;
 
   List<Map<String, String>> get sensorData => _sensorData;
   List<Map<String, dynamic>> get history => _history;
+  bool get isScheduleActivated => _scheduleActivated;
+  TimeOfDay get scheduledTime => _scheduledTime;
 
   void connectToMqtt({
     required String broker,
@@ -40,59 +46,55 @@ class SensorDataProvider extends ChangeNotifier {
       onConnected: () {
         _isConnected = true;
         mqtt.subscribe('pflanzen/pflanze01');
-        if (onConnected != null) onConnected();
+        onConnected?.call();
+        notifyListeners();
       },
     );
   }
 
-  /// Reconnect if disconnected
   void reconnectIfNeeded() {
     if (!_isConnected) {
-      connectToMqtt(
-        broker: 'your_broker_ip_or_hostname',
-        port: 1883,
-        // username/password if needed
-      );
+      connectToMqtt(broker: 'your_broker_ip_or_hostname', port: 1883);
     }
   }
 
-Future<void> triggerWatering({int? sensorId}) async {
-  if (sensorId != null) {
-    // Trigger a specific sensor pump
-    mqtt.publish('esp32/watering/$sensorId', 'start');
+  Future<void> triggerWatering({int? sensorId, String source = 'manual'}) async {
+    debugPrint("🚿 triggerWatering called with source=$source");
 
-    _history.add({
-      'timestamp': DateTime.now(),
-      'type': 'watering',
-      'sensorId': sensorId,
-      'message': 'Manuelle Bewässerung Sensor ${sensorId + 1}',
-    });
+    List<bool> pumpStates = List.filled(3, false);
 
-    // Update sensor's lastWatered field
-    _sensorData[sensorId]["lastWatered"] = _formattedNow();
-  } else {
-    // Trigger all 3 pumps
-    for (int i = 0; i < 3; i++) {
-      mqtt.publish('esp32/watering/$i', 'start');
-      _sensorData[i]["lastWatered"] = _formattedNow();
+    if (sensorId != null) {
+      pumpStates[sensorId] = true;
+      _sensorData[sensorId]["lastWatered"] = _formattedNow();
+
+      _history.add({
+        'timestamp': DateTime.now(),
+        'type': 'watering',
+        'sensorId': sensorId,
+        'message': source == 'schedule'
+            ? 'Zeitplan: Sensor ${sensorId + 1} automatisch bewässert'
+            : 'Manuelle Bewässerung Sensor ${sensorId + 1}',
+      });
+    } else {
+      pumpStates = List.filled(3, true);
+      for (int i = 0; i < 3; i++) {
+        _sensorData[i]["lastWatered"] = _formattedNow();
+      }
+
+      _history.add({
+        'timestamp': DateTime.now(),
+        'type': 'watering',
+        'sensorId': -1,
+        'message': source == 'schedule'
+            ? 'Zeitplan: Alle Sensoren automatisch bewässert'
+            : 'Alle Sensoren manuell bewässert',
+      });
     }
 
-    _history.add({
-      'timestamp': DateTime.now(),
-      'type': 'watering',
-      'sensorId': -1,
-      'message': 'Alle Sensoren bewässert',
-    });
+    mqtt.publish('esp32/watering', jsonEncode({"pump": pumpStates}));
+    await _saveHistoryToPrefs();
+    notifyListeners();
   }
-
-  await _saveHistoryToPrefs();
-  notifyListeners();
-}
-
-String _formattedNow() {
-  final now = DateTime.now();
-  return "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} Uhr";
-}
 
   Future<void> updateSensorFromJson(String jsonString) async {
     debugPrint("📥 Received MQTT: $jsonString");
@@ -144,38 +146,6 @@ String _formattedNow() {
     }
   }
 
-      // Save broker credentials
-      Future<void> saveBrokerCredentials({
-        required String broker,
-        required int port,
-        String? username,
-        String? password,
-      }) async {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('mqtt_broker', broker);
-        await prefs.setInt('mqtt_port', port);
-        if (username != null) await prefs.setString('mqtt_user', username);
-        if (password != null) await prefs.setString('mqtt_pass', password);
-      }
-
-      // Load broker credentials
-      Future<void> loadAndConnectFromPrefs() async {
-        final prefs = await SharedPreferences.getInstance();
-        final broker = prefs.getString('mqtt_broker');
-        final port = prefs.getInt('mqtt_port');
-        final username = prefs.getString('mqtt_user');
-        final password = prefs.getString('mqtt_pass');
-
-        if (broker != null && port != null) {
-          connectToMqtt(
-            broker: broker,
-            port: port,
-            username: username,
-            password: password,
-          );
-        }
-      }
-
   Future<void> _saveHistoryToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = jsonEncode(_history.map((entry) {
@@ -202,5 +172,87 @@ String _formattedNow() {
       }).toList());
       notifyListeners();
     }
+  }
+
+  Future<void> saveBrokerCredentials({
+    required String broker,
+    required int port,
+    String? username,
+    String? password,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('mqtt_broker', broker);
+    await prefs.setInt('mqtt_port', port);
+    if (username != null) await prefs.setString('mqtt_user', username);
+    if (password != null) await prefs.setString('mqtt_pass', password);
+  }
+
+  Future<void> loadAndConnectFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final broker = prefs.getString('mqtt_broker');
+    final port = prefs.getInt('mqtt_port');
+    final username = prefs.getString('mqtt_user');
+    final password = prefs.getString('mqtt_pass');
+
+    if (broker != null && port != null) {
+      connectToMqtt(
+        broker: broker,
+        port: port,
+        username: username,
+        password: password,
+      );
+    }
+  }
+
+  Future<void> loadScheduleFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    _scheduleActivated = prefs.getBool('schedule_active') ?? false;
+    final hour = prefs.getInt('schedule_hour') ?? 8;
+    final minute = prefs.getInt('schedule_minute') ?? 0;
+    _scheduledTime = TimeOfDay(hour: hour, minute: minute);
+    _startScheduleTimer();
+    notifyListeners();
+  }
+
+  Future<void> saveScheduleToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('schedule_active', _scheduleActivated);
+    await prefs.setInt('schedule_hour', _scheduledTime.hour);
+    await prefs.setInt('schedule_minute', _scheduledTime.minute);
+  }
+
+  void updateSchedule({required bool isActive, required TimeOfDay time}) {
+    _scheduleActivated = isActive;
+    _scheduledTime = time;
+    saveScheduleToPrefs();
+    _startScheduleTimer();
+    notifyListeners();
+  }
+
+  void _startScheduleTimer() {
+    debugPrint("🕓 Starting schedule timer...");
+    _scheduleTimer?.cancel();
+    _scheduleTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      final now = TimeOfDay.now();
+      debugPrint("🕐 Checking schedule: now=${now.hour}:${now.minute} | target=${_scheduledTime.hour}:${_scheduledTime.minute}");
+
+      if (_scheduleActivated &&
+          now.hour == _scheduledTime.hour &&
+          now.minute == _scheduledTime.minute) {
+        debugPrint("🚿 Zeitplan ausgelöst: automatische Bewässerung");
+        triggerWatering(source: 'schedule');
+      }
+    });
+  }
+
+  String _formattedNow() {
+    final now = DateTime.now();
+    return "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} Uhr";
+  }
+
+  @override
+  void dispose() {
+    _scheduleTimer?.cancel();
+    super.dispose();
   }
 }

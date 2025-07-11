@@ -1,22 +1,17 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'widgets/custom_scaffold.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
-class ZeitplanScreen extends StatefulWidget {
+import 'widgets/custom_scaffold.dart';
+import 'widgets/sensor_data_provider.dart';
+
+class ZeitplanScreen extends StatelessWidget {
   const ZeitplanScreen({super.key});
 
-  @override
-  State<ZeitplanScreen> createState() => _ZeitplanScreenState();
-}
-
-class _ZeitplanScreenState extends State<ZeitplanScreen> {
-  bool isActivated = true;
-  TimeOfDay selectedTime = const TimeOfDay(hour: 8, minute: 0);
-
-  void _showStyledTimePicker() {
-    int hour = selectedTime.hour;
-    int minute = selectedTime.minute;
+  void _showStyledTimePicker(BuildContext context, TimeOfDay currentTime) {
+    int hour = currentTime.hour;
+    int minute = currentTime.minute;
 
     showModalBottomSheet(
       context: context,
@@ -108,9 +103,11 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
                           ),
                         ),
                         onPressed: () {
-                          setState(() {
-                            selectedTime = TimeOfDay(hour: hour, minute: minute);
-                          });
+                          final provider = context.read<SensorDataProvider>();
+                          provider.updateSchedule(
+                            isActive: provider.isScheduleActivated,
+                            time: TimeOfDay(hour: hour, minute: minute),
+                          );
                           HapticFeedback.lightImpact();
                           Navigator.pop(context);
                         },
@@ -129,6 +126,8 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SensorDataProvider>();
+
     return CustomScaffold(
       title: 'Zeitplan',
       body: Column(
@@ -152,14 +151,15 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
               children: [
                 const Text("Aktivieren", style: TextStyle(fontSize: 18)),
                 Switch(
-                  value: isActivated,
+                  value: provider.isScheduleActivated,
                   activeColor: Colors.white,
                   activeTrackColor: Colors.green,
                   onChanged: (value) {
                     HapticFeedback.mediumImpact();
-                    setState(() {
-                      isActivated = value;
-                    });
+                    provider.updateSchedule(
+                      isActive: value,
+                      time: provider.scheduledTime,
+                    );
                   },
                 ),
               ],
@@ -170,7 +170,7 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
 
           // Time Picker Box
           GestureDetector(
-            onTap: _showStyledTimePicker,
+            onTap: () => _showStyledTimePicker(context, provider.scheduledTime),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 24),
@@ -180,7 +180,7 @@ class _ZeitplanScreenState extends State<ZeitplanScreen> {
               ),
               child: Center(
                 child: Text(
-                  "${selectedTime.hour.toString().padLeft(2, '0')} : ${selectedTime.minute.toString().padLeft(2, '0')}",
+                  "${provider.scheduledTime.hour.toString().padLeft(2, '0')} : ${provider.scheduledTime.minute.toString().padLeft(2, '0')}",
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
