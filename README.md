@@ -77,7 +77,7 @@ mqtt_client
 
 ## 👥 Team
 
-- Zulfahmi Nur Vagala (Software)
+- Zul Fahmi Nur Vagala (Software)
 - Dzaid Abiyyu Siregar (ESP32)
 - Johannes Berg (Konstruktion)
 
