@@ -102,10 +102,10 @@ Team 5
 - Johannes Berg (Konstruktion)
 
 ## Screenshots of the current project / Screenshots des aktuellen Projekts
-<img width="800" height="1500" alt="IMG_4496" src="https://github.com/user-attachments/assets/65537d3d-12b1-4951-bfe9-2002cf80b9a1" />
-<img width="800" height="1500" alt="IMG_4495" src="https://github.com/user-attachments/assets/f80a1478-ce99-4ed8-b8e8-b998e050fd81" />
-<img width="800" height="1500" alt="IMG_4494" src="https://github.com/user-attachments/assets/897d9c51-c877-421e-bd2b-b434b8facd0e" />
-<img width="800" height="1500" alt="IMG_4493" src="https://github.com/user-attachments/assets/327d88e4-bdc5-427e-94db-5831c285067d" />
-<img width="800" height="1500" alt="IMG_4491" src="https://github.com/user-attachments/assets/0158f4b8-e42f-416c-acdb-42f1cee4a5c7" />
-<img width="800" height="1500" alt="IMG_4490" src="https://github.com/user-attachments/assets/873138d0-92ef-42e4-a394-e5602b71f7cf" />
+<img width="300" height="700" alt="IMG_4496" src="https://github.com/user-attachments/assets/65537d3d-12b1-4951-bfe9-2002cf80b9a1" />
+<img width="300" height="700" alt="IMG_4495" src="https://github.com/user-attachments/assets/f80a1478-ce99-4ed8-b8e8-b998e050fd81" />
+<img width="300" height="700" alt="IMG_4494" src="https://github.com/user-attachments/assets/897d9c51-c877-421e-bd2b-b434b8facd0e" />
+<img width="300" height="700" alt="IMG_4493" src="https://github.com/user-attachments/assets/327d88e4-bdc5-427e-94db-5831c285067d" />
+<img width="300" height="700" alt="IMG_4491" src="https://github.com/user-attachments/assets/0158f4b8-e42f-416c-acdb-42f1cee4a5c7" />
+<img width="300" height="700" alt="IMG_4490" src="https://github.com/user-attachments/assets/873138d0-92ef-42e4-a394-e5602b71f7cf" />
 
