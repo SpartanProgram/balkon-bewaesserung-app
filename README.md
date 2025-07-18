@@ -8,30 +8,22 @@ Eine Flutter-App zur Steuerung und Überwachung einer automatischen Balkonbewäs
 ## 📱 Features / Funktionen
 
 - 🔧 **MQTT Configuration / MQTT-Konfiguration**
-  - Connect to a custom broker with TLS
-  - Verbindung zu einem eigenen Broker mit TLS
+  - Connect to a custom broker with TLS / Verbindung zu einem eigenen Broker mit TLS
 
 - 🌱 **Real-Time Sensor Monitoring / Live-Sensordaten**
-  - Moisture sensors for up to 3 plants
-  - Bodenfeuchtigkeit von bis zu 3 Sensoren
-  - Water tank level
-  - Wasserstand im Tank
+  - Moisture sensors for up to 3 plants / Bodenfeuchtigkeit von bis zu 3 Sensoren
+  - Water tank level / Wasserstand im Tank
 
 - 📅 **Watering Schedule / Bewässerungszeitplan**
-  - Automatic watering at set time
-  - Automatische Bewässerung zur gewünschten Zeit
-  - Manual watering per sensor or all
-  - Manuelle Bewässerung einzelner oder aller Pflanzen
+  - Automatic watering at set time / Automatische Bewässerung zur gewünschten Zeit
+  - Manual watering per sensor or all / Manuelle Bewässerung einzelner oder aller Pflanzen
 
 - 🔔 **Push Notifications / Push-Benachrichtigungen**
-  - Low moisture or water level
-  - Warnungen bei niedriger Feuchtigkeit oder Wasserstand
-  - Scheduled watering completed
-  - Erinnerung bei erfolgter Zeitplan-Bewässerung
+  - Low moisture or water level / Warnungen bei niedriger Feuchtigkeit oder Wasserstand
+  - Scheduled watering completed / Erinnerung bei erfolgter Zeitplan-Bewässerung
 
 - 🕘 **History View / Verlauf**
-  - Log of all watering events and warnings
-  - Verlauf aller Aktionen und Warnungen
+  - Log of all watering events and warnings / Verlauf aller Aktionen und Warnungen
 
 ---
 
@@ -85,14 +77,11 @@ await Permission.notification.request();
 
 ## 🚫 Known Issues / Bekannte Einschränkungen
 
-Only one MQTT connection per session
-Nur eine Verbindung pro Gerät/Sitzung möglich
+Only one MQTT connection per session / Nur eine Verbindung pro Gerät/Sitzung möglich
 
-Sensor data updates all 3 moisture values
-Alle Sensorwerte werden gesendet, auch wenn deaktiviert
+Sensor data updates all 3 moisture values / Alle Sensorwerte werden gesendet, auch wenn deaktiviert
 
-Limited notification customization
-Nur grundlegende Icons/Symbole in Benachrichtigungen
+Limited notification customization / Nur grundlegende Icons/Symbole in Benachrichtigungen
 
 ## 💡 Future Work (Sprint 3)
 
