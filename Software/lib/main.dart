@@ -28,8 +28,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SensorDataProvider>(context);
-
     return Consumer<SensorDataProvider>(
       builder: (context, provider, _) {
         return MaterialApp(
@@ -38,21 +36,40 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.light,
+            scaffoldBackgroundColor: const Color(0xFFDFFFD7),
+            cardColor: const Color(0xFFF7FDEB),
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.lightGreen,
               background: const Color(0xFFDFFFD7),
+              brightness: Brightness.light,
+            ),
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(color: Colors.black),
+              bodyMedium: TextStyle(color: Colors.black87),
+            ),
+            switchTheme: SwitchThemeData(
+              thumbColor: MaterialStateProperty.all(Colors.white),
+              trackColor: MaterialStateProperty.all(Colors.green),
             ),
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            cardColor: const Color(0xFF1E1E1E),
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.greenAccent,
               brightness: Brightness.dark,
               background: const Color(0xFF121212),
             ),
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            cardColor: const Color(0xFF1E1E1E),
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(color: Colors.white),
+              bodyMedium: TextStyle(color: Colors.white70),
+            ),
+            switchTheme: SwitchThemeData(
+              thumbColor: MaterialStateProperty.all(Colors.white),
+              trackColor: MaterialStateProperty.all(Colors.green),
+            ),
           ),
           home: const HomeScreen(),
         );
