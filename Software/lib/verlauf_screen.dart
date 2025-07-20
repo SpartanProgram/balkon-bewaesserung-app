@@ -105,14 +105,16 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor,
   final String formattedDate =
       "${_weekdayLong(date.weekday)} – ${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}";
 
+  final cardColor = Theme.of(context).cardColor;
+  final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
   return Container(
     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
     decoration: BoxDecoration(
-      color: const Color(0xFFF7FDEB),
+      color: cardColor,
       border: Border.all(color: borderColor, width: 2),
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    child: Column(
+    ),    child: Column(
       mainAxisSize: MainAxisSize.max,
       children: [
         Align(
@@ -124,7 +126,11 @@ Widget _buildDetailPopup(BuildContext context, DateTime date, Color borderColor,
         ),
         Text(
           formattedDate,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: textColor,
+          ),
         ),
         const SizedBox(height: 12),
         Expanded(
