@@ -28,15 +28,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<SensorDataProvider>(context);
+
     return MaterialApp(
       title: 'Balkon Bewässerung',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.lightGreen,
-          background: const Color(0xFFDFFFD7),
-        ),
-      ),
+      theme: ThemeData.light(useMaterial3: true),
+      darkTheme: ThemeData.dark(useMaterial3: true),
+      themeMode: provider.themeMode, // ← dynamic theme mode
       home: const HomeScreen(),
     );
   }

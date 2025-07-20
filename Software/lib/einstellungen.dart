@@ -126,6 +126,48 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
             ),
 
             const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7FDEB),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Consumer<SensorDataProvider>(
+                  builder: (context, provider, _) {
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("🌗 Dunkler Modus", style: TextStyle(fontSize: 20)),
+                        DropdownButton<ThemeMode>(
+                          value: provider.themeMode,
+                          onChanged: (mode) {
+                            if (mode != null) {
+                              provider.saveThemeMode(mode);
+                            }
+                          },
+                          items: const [
+                            DropdownMenuItem(
+                              value: ThemeMode.system,
+                              child: Text("System"),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeMode.light,
+                              child: Text("Hell"),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeMode.dark,
+                              child: Text("Dunkel"),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+
+
+            const SizedBox(height: 32),
 
             // MQTT Broker settings
             Padding(

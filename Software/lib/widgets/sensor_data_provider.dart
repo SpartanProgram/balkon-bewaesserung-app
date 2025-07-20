@@ -291,4 +291,37 @@ class SensorDataProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+    ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode get themeMode => _themeMode;
+
+  Future<void> loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final mode = prefs.getString('theme_mode') ?? 'system';
+    _themeMode = _stringToThemeMode(mode);
+    notifyListeners();
+  }
+
+  Future<void> saveThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme_mode', _themeModeToString(mode));
+    _themeMode = mode;
+    notifyListeners();
+  }
+
+  String _themeModeToString(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.dark: return 'dark';
+      case ThemeMode.light: return 'light';
+      default: return 'system';
+    }
+  }
+
+  ThemeMode _stringToThemeMode(String mode) {
+    switch (mode) {
+      case 'dark': return ThemeMode.dark;
+      case 'light': return ThemeMode.light;
+      default: return ThemeMode.system;
+    }
+  }
+
 }
