@@ -166,15 +166,19 @@ class _CustomScaffoldState extends State<CustomScaffold> {
     IconData icon,
     VoidCallback onTap,
   ) {
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final iconColor = Theme.of(context).iconTheme.color ?? Colors.black;
+    final highlightColor = Theme.of(context).highlightColor;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Material(
-        color: Theme.of(context).textTheme.bodyMedium?.color,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           splashColor: Colors.green.withOpacity(0.3),
-          highlightColor: Colors.green.withOpacity(0.1),
+          highlightColor: highlightColor,
           onTap: () {
             HapticFeedback.lightImpact();
             setState(() => _drawerOpen = false);
@@ -187,11 +191,11 @@ class _CustomScaffoldState extends State<CustomScaffold> {
             ),
             child: Row(
               children: [
-                Icon(icon, color: Colors.black87),
+                Icon(icon, color: iconColor),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 18, color: Colors.black87),
+                  style: TextStyle(fontSize: 18, color: textColor),
                 ),
               ],
             ),
