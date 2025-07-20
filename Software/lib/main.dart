@@ -30,34 +30,33 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<SensorDataProvider>(context);
 
-    return MaterialApp(
-      title: 'Balkon Bewässerung',
-      themeMode: provider.themeMode,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFDFFFD7),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.lightGreen,
-          brightness: Brightness.light,
-        ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.black),
-        ),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF1E1E1E),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.greenAccent,
-          brightness: Brightness.dark,
-        ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.white),
-        ),
-      ),
-      home: const HomeScreen(),
+    return Consumer<SensorDataProvider>(
+      builder: (context, provider, _) {
+        return MaterialApp(
+          title: 'Balkon Bewässerung',
+          themeMode: provider.themeMode,
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.lightGreen,
+              background: const Color(0xFFDFFFD7),
+            ),
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.greenAccent,
+              brightness: Brightness.dark,
+              background: const Color(0xFF121212),
+            ),
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            cardColor: const Color(0xFF1E1E1E),
+          ),
+          home: const HomeScreen(),
+        );
+      },
     );
   }
 }

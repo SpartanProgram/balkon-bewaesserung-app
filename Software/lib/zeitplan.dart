@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
+import 'widgets/light_box.dart';
 
 class ZeitplanScreen extends StatelessWidget {
   const ZeitplanScreen({super.key});
@@ -12,6 +12,10 @@ class ZeitplanScreen extends StatelessWidget {
   void _showStyledTimePicker(BuildContext context, TimeOfDay currentTime) {
     int hour = currentTime.hour;
     int minute = currentTime.minute;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+
 
     showModalBottomSheet(
       context: context,
@@ -22,9 +26,9 @@ class ZeitplanScreen extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           child: Container(
             height: 340,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF7FDEB),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor, // Dynamically adapts to theme
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
               children: [
@@ -140,12 +144,7 @@ class ZeitplanScreen extends StatelessWidget {
           const SizedBox(height: 32),
 
           // Activation Switch Box
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7FDEB),
-              borderRadius: BorderRadius.circular(24),
-            ),
+          LightBox(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -171,13 +170,8 @@ class ZeitplanScreen extends StatelessWidget {
           // Time Picker Box
           GestureDetector(
             onTap: () => _showStyledTimePicker(context, provider.scheduledTime),
-            child: Container(
-              width: double.infinity,
+            child: LightBox(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7FDEB),
-                borderRadius: BorderRadius.circular(24),
-              ),
               child: Center(
                 child: Text(
                   "${provider.scheduledTime.hour.toString().padLeft(2, '0')} : ${provider.scheduledTime.minute.toString().padLeft(2, '0')}",

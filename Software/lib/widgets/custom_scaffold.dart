@@ -26,7 +26,7 @@ class _CustomScaffoldState extends State<CustomScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDFFFD7),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           SafeArea(
@@ -107,7 +107,7 @@ class _CustomScaffoldState extends State<CustomScaffold> {
           bottomRight: Radius.circular(100),
         ),
         child: Container(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           width: 240,
           height: MediaQuery.of(context).size.height,
           child: ListView(
@@ -169,7 +169,7 @@ class _CustomScaffoldState extends State<CustomScaffold> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Material(
-        color: Colors.transparent,
+        color: Theme.of(context).textTheme.bodyMedium?.color,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
