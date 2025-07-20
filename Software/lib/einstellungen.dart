@@ -17,6 +17,7 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
   bool _benachrichtigungenAktiv = true;
   bool _useTLS = false;
   bool _passwordVisible = false;
+  
 
   final TextEditingController _brokerController = TextEditingController();
   final TextEditingController _portController = TextEditingController(text: '8883');
@@ -84,6 +85,9 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     return CustomScaffold(
       title: "Einstellungen",
       body: SingleChildScrollView(
@@ -96,23 +100,23 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7FDEB),
+                color: cardColor,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Flexible(
+                  Flexible(
                     child: Text(
                       "Benach-\nrichtigungen",
-                      style: TextStyle(fontSize: 20),
+                      style: TextStyle(fontSize: 20, color: textColor),
                     ),
                   ),
                   Switch(
                     value: _benachrichtigungenAktiv,
                     activeColor: Colors.white,
                     activeTrackColor: Colors.green,
-                    onChanged: (value)  async{
+                    onChanged: (value) async {
                       HapticFeedback.mediumImpact();
                       setState(() {
                         _benachrichtigungenAktiv = value;
@@ -129,16 +133,16 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7FDEB),
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Flexible(
+                    Flexible(
                       child: Text(
                         "🌗 Dunkler\nModus",
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(fontSize: 20, color: textColor),
                       ),
                     ),
                     Consumer<SensorDataProvider>(

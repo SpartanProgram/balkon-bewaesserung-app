@@ -13,10 +13,6 @@ class ZeitplanScreen extends StatelessWidget {
     int hour = currentTime.hour;
     int minute = currentTime.minute;
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
