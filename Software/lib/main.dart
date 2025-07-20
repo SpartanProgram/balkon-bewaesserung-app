@@ -48,8 +48,14 @@ class MyApp extends StatelessWidget {
               bodyMedium: TextStyle(color: Colors.black87),
             ),
             switchTheme: SwitchThemeData(
-              thumbColor: MaterialStateProperty.all(Colors.white),
-              trackColor: MaterialStateProperty.all(Colors.green),
+              thumbColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) return Colors.white;
+                return Colors.grey;
+              }),
+              trackColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) return Colors.green;
+                return Colors.grey.shade400;
+              }),
             ),
           ),
           darkTheme: ThemeData(
