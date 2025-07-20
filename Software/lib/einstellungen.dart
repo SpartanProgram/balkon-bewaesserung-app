@@ -132,37 +132,30 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                   color: const Color(0xFFF7FDEB),
                   borderRadius: BorderRadius.circular(24),
                 ),
-                child: Consumer<SensorDataProvider>(
-                  builder: (context, provider, _) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("🌗 Dunkler Modus", style: TextStyle(fontSize: 20)),
-                        DropdownButton<ThemeMode>(
-                          value: provider.themeMode,
-                          onChanged: (mode) {
-                            if (mode != null) {
-                              provider.saveThemeMode(mode);
-                            }
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "🌗 Dunkler\nModus",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    Consumer<SensorDataProvider>(
+                      builder: (context, provider, _) {
+                        return Switch(
+                          value: provider.themeMode == ThemeMode.dark,
+                          activeColor: Colors.white,
+                          activeTrackColor: Colors.green,
+                          onChanged: (isDark) {
+                            HapticFeedback.mediumImpact();
+                            final newMode = isDark ? ThemeMode.dark : ThemeMode.light;
+                            provider.saveThemeMode(newMode);
                           },
-                          items: const [
-                            DropdownMenuItem(
-                              value: ThemeMode.system,
-                              child: Text("System"),
-                            ),
-                            DropdownMenuItem(
-                              value: ThemeMode.light,
-                              child: Text("Hell"),
-                            ),
-                            DropdownMenuItem(
-                              value: ThemeMode.dark,
-                              child: Text("Dunkel"),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
 
