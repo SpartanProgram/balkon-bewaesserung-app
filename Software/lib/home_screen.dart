@@ -42,6 +42,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final sensorData = context.watch<SensorDataProvider>().sensorData;
     final isConnected = context.watch<SensorDataProvider>().isConnected;
 
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return CustomScaffold(
       title: 'Hauptmenü',
@@ -102,10 +105,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
-                      _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!),
-                      const SizedBox(height: 16),
-                      _infoCard("Letzte Bewässerung", sensor["lastWatered"]!),
-                      const SizedBox(height: 16),
+                      _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!, cardColor: cardColor, textColor: textColor),
+                      _infoCard("Letzte Bewässerung", sensor["lastWatered"]!, cardColor: cardColor, textColor: textColor),                      
                       ElevatedButton(
                         onPressed: () {
                           context.read<SensorDataProvider>().triggerWatering(sensorId: index);
@@ -127,8 +128,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   : Icons.circle_outlined,
                               size: 10,
                               color: _currentSensorIndex == dotIndex
-                                  ? Colors.black
-                                  : Colors.grey,
+                                  ? (isDark ? Colors.white : Colors.black)
+                                  : (isDark ? Colors.white54 : Colors.grey),
                             ),
                           );
                         }),
@@ -181,6 +182,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _waterLevelIndicator(String waterLevelStr) {
     int level = int.tryParse(waterLevelStr.replaceAll('%', '')) ?? -1;
 
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+
     IconData icon = Icons.water_drop;
     Color iconColor;
     String statusText;
@@ -203,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7FDEB),
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -212,19 +216,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           const SizedBox(width: 12),
           Text(
             statusText,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: textColor),
           ),
         ],
       ),
     );
   }
 
-  static Widget _infoCard(String title, String value) {
+  static Widget _infoCard(String title, String value, {required Color cardColor, required Color textColor}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7FDEB),
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -232,11 +236,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18, color: textColor),
           ),
           Text(
             value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
           ),
         ],
       ),
