@@ -116,6 +116,8 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                     value: _benachrichtigungenAktiv,
                     activeColor: Colors.white,
                     activeTrackColor: Colors.green,
+                    inactiveThumbColor: Colors.grey.shade400,
+                    inactiveTrackColor: Colors.grey.shade600,                    
                     onChanged: (value) async {
                       HapticFeedback.mediumImpact();
                       setState(() {

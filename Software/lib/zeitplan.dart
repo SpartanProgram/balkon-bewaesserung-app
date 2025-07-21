@@ -149,6 +149,8 @@ class ZeitplanScreen extends StatelessWidget {
                   value: provider.isScheduleActivated,
                   activeColor: Colors.white,
                   activeTrackColor: Colors.green,
+                  inactiveThumbColor: Colors.grey.shade400,
+                  inactiveTrackColor: Colors.grey.shade600,                  
                   onChanged: (value) {
                     HapticFeedback.mediumImpact();
                     provider.updateSchedule(
