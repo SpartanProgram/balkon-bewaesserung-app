@@ -18,7 +18,7 @@ class LightBox extends StatelessWidget {
       margin: margin,
       padding: padding,
       decoration: BoxDecoration(
-        color: const Color(0xFFF7FDEB), // cream background
+        color: Theme.of(context).cardColor, // cream background
         borderRadius: BorderRadius.circular(24),
       ),
       child: DefaultTextStyle(

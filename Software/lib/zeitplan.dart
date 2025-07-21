@@ -144,7 +144,9 @@ class ZeitplanScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Aktivieren", style: TextStyle(fontSize: 18)),
+                Text("Aktivieren", style: TextStyle(fontSize: 18, color: Theme.of(context).textTheme.bodyLarge?.color,
+               ),
+             ),
                 Switch(
                   value: provider.isScheduleActivated,
                   activeColor: Colors.white,
@@ -173,9 +175,10 @@ class ZeitplanScreen extends StatelessWidget {
               child: Center(
                 child: Text(
                   "${provider.scheduledTime.hour.toString().padLeft(2, '0')} : ${provider.scheduledTime.minute.toString().padLeft(2, '0')}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,                   
                   ),
                 ),
               ),

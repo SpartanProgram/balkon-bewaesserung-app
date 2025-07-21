@@ -48,13 +48,14 @@ class MyApp extends StatelessWidget {
               bodyMedium: TextStyle(color: Colors.black87),
             ),
             switchTheme: SwitchThemeData(
-                thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(MaterialState.selected)) return Colors.white;
-                  return Colors.grey.shade400;
-                }),
-                trackColor: MaterialStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(MaterialState.selected)) return Colors.green;
-                  return Colors.grey.shade600;              }),
+              thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
+                if (states.contains(MaterialState.selected)) return Colors.white;
+                return Colors.grey.shade400;
+              }),
+              trackColor: MaterialStateProperty.resolveWith<Color>((states) {
+                if (states.contains(MaterialState.selected)) return Colors.green;
+                return Colors.grey.shade600;
+              }),
             ),
           ),
           darkTheme: ThemeData(
@@ -72,16 +73,17 @@ class MyApp extends StatelessWidget {
               bodyMedium: TextStyle(color: Colors.white70),
             ),
             switchTheme: SwitchThemeData(
-                thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(MaterialState.selected)) return Colors.white;
-                  return Colors.grey.shade400;
-                }),
-                trackColor: MaterialStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(MaterialState.selected)) return Colors.green;
-                  return Colors.grey.shade700;            
-                  }),
+              thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
+                if (states.contains(MaterialState.selected)) return Colors.white;
+                return Colors.grey.shade400;
+              }),
+              trackColor: MaterialStateProperty.resolveWith<Color>((states) {
+                if (states.contains(MaterialState.selected)) return Colors.green;
+                return Colors.grey.shade700;
+              }),
             ),
-          )
+          ),
+          home: const HomeScreen(),
         );
       },
     );
