@@ -126,8 +126,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               _currentSensorIndex == dotIndex
                                   ? Icons.circle
                                   : Icons.circle_outlined,
-                              size: 10,
-                              color: _currentSensorIndex == dotIndex
+                                  size: 10,
+                                  color: _currentSensorIndex == dotIndex
                                   ? (isDark ? Colors.white : Colors.black)
                                   : (isDark ? Colors.white54 : Colors.grey),
                             ),

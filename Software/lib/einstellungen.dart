@@ -83,6 +83,18 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
     );
   }
 
+    void _loadNotificationPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('notifications_enabled')) {
+      // First time: set default to false
+      await prefs.setBool('notifications_enabled', false);
+    }
+    setState(() {
+      _benachrichtigungenAktiv = prefs.getBool('notifications_enabled') ?? false;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final cardColor = Theme.of(context).cardColor;
@@ -147,20 +159,23 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
                         style: TextStyle(fontSize: 20, color: textColor),
                       ),
                     ),
-                    Consumer<SensorDataProvider>(
-                      builder: (context, provider, _) {
-                        return Switch(
-                          value: provider.themeMode == ThemeMode.dark,
-                          activeColor: Colors.white,
-                          activeTrackColor: Colors.green,
-                          onChanged: (isDark) {
-                            HapticFeedback.mediumImpact();
-                            final newMode = isDark ? ThemeMode.dark : ThemeMode.light;
-                            provider.saveThemeMode(newMode);
-                          },
-                        );
-                      },
-                    ),
+                  Consumer<SensorDataProvider>(
+                    builder: (context, provider, _) {
+                      final isDark = provider.themeMode == ThemeMode.dark;
+
+                      return Switch(
+                        value: isDark,
+                        onChanged: (value) async {
+                          HapticFeedback.mediumImpact();
+                          await provider.saveThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+                        },
+                        activeColor: Colors.white,
+                        activeTrackColor: Colors.green,
+                        inactiveThumbColor: Colors.grey.shade400,
+                        inactiveTrackColor: Colors.grey.shade600,
+                      );
+                    },
+                  ),
                   ],
                 ),
               ),
@@ -302,16 +317,5 @@ class _EinstellungenScreenState extends State<EinstellungenScreen> {
   void initState() {
     super.initState();
     _loadNotificationPref();
-  }
-
-  void _loadNotificationPref() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey('notifications_enabled')) {
-      // First time: set default to false
-      await prefs.setBool('notifications_enabled', false);
     }
-    setState(() {
-      _benachrichtigungenAktiv = prefs.getBool('notifications_enabled') ?? false;
-    });
   }
-}

@@ -12,9 +12,9 @@ void main() async {
 
   final provider = SensorDataProvider();
   await provider.loadHistoryFromPrefs();
-  await provider.loadScheduleFromPrefs(); 
-  await provider.loadAndConnectFromPrefs(); 
-
+  await provider.loadScheduleFromPrefs();
+  await provider.loadAndConnectFromPrefs();
+  
   runApp(
     ChangeNotifierProvider.value(
       value: provider,
@@ -48,12 +48,12 @@ class MyApp extends StatelessWidget {
               bodyMedium: TextStyle(color: Colors.black87),
             ),
             switchTheme: SwitchThemeData(
-              thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
-                if (states.contains(MaterialState.selected)) return Colors.white;
+              thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
                 return Colors.grey.shade400;
               }),
-              trackColor: MaterialStateProperty.resolveWith<Color>((states) {
-                if (states.contains(MaterialState.selected)) return Colors.green;
+              trackColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) return Colors.green;
                 return Colors.grey.shade600;
               }),
             ),
@@ -73,12 +73,12 @@ class MyApp extends StatelessWidget {
               bodyMedium: TextStyle(color: Colors.white70),
             ),
             switchTheme: SwitchThemeData(
-              thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
-                if (states.contains(MaterialState.selected)) return Colors.white;
+              thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
                 return Colors.grey.shade400;
               }),
-              trackColor: MaterialStateProperty.resolveWith<Color>((states) {
-                if (states.contains(MaterialState.selected)) return Colors.green;
+              trackColor: WidgetStateProperty.resolveWith<Color>((states) {
+                if (states.contains(WidgetState.selected)) return Colors.green;
                 return Colors.grey.shade700;
               }),
             ),
