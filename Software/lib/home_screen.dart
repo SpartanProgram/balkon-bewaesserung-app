@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
+import '../services/sensor_name_service.dart';
+
 
 
 class HomeScreen extends StatefulWidget {
@@ -36,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       provider.reconnectIfNeeded(); // This assumes you have reconnect logic in the provider
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -99,11 +102,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        sensor["sensor"]!,
-                        style: const TextStyle(fontSize: 22),
-                        textAlign: TextAlign.center,
-                      ),
+                      FutureBuilder<String>(
+                      future: SensorNameService.getName(index, fallback: sensor["sensor"]!),
+                      builder: (context, snapshot) {
+                        final sensorName = snapshot.data ?? sensor["sensor"]!;
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              sensorName,
+                              style: const TextStyle(fontSize: 22),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20),
+                              onPressed: () => _showRenameDialog(context, index),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
                       const SizedBox(height: 16),
                       _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!, cardColor: cardColor, textColor: textColor),
                       _infoCard("Letzte Bewässerung", sensor["lastWatered"]!, cardColor: cardColor, textColor: textColor),                      
@@ -178,6 +198,101 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
   }
+
+void _showRenameDialog(BuildContext context, int sensorIndex) async {
+  final List<String> plantOptions = [
+    '🌱 Basilikum',
+    '🍅 Tomate',
+    '🫑 Paprika',
+    '🌶 Chili',
+    '🥬 Salat',
+    '🍓 Erdbeere',
+    '🌼 Minze',
+    '🧅 Schnittlauch',
+    '🔤 Benutzerdefiniert',
+  ];
+
+  String selectedOption = plantOptions[0];
+  String customName = '';
+
+  final currentName = await SensorNameService.getName(sensorIndex, fallback: 'Sensor ${sensorIndex + 1}');
+  if (plantOptions.contains(currentName)) {
+    selectedOption = currentName;
+  } else {
+    selectedOption = '🔤 Benutzerdefiniert';
+    customName = currentName;
+  }
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Sensor umbenennen"),
+        content: StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedOption,
+                  items: plantOptions.map((plant) {
+                    return DropdownMenuItem(
+                      value: plant,
+                      child: Text(plant),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedOption = value!;
+                      if (value != '🔤 Benutzerdefiniert') {
+                        customName = '';
+                      }
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    labelText: "Pflanze auswählen",
+                  ),
+                ),
+                if (selectedOption == '🔤 Benutzerdefiniert')
+                  TextField(
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: "Individueller Name",
+                    ),
+                    onChanged: (value) => customName = value,
+                    controller: TextEditingController(text: customName),
+                  ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Abbrechen"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final finalName = selectedOption == '🔤 Benutzerdefiniert'
+                  ? customName.trim()
+                  : selectedOption;
+
+              if (finalName.isNotEmpty) {
+                await SensorNameService.saveName(sensorIndex, finalName);
+                Navigator.of(context).pop();
+                setState(() {});
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('🌿 Sensor ${sensorIndex + 1} als "$finalName" gespeichert')),
+                );
+              }
+            },
+            child: const Text("Speichern"),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   Widget _waterLevelIndicator(String waterLevelStr) {
     int level = int.tryParse(waterLevelStr.replaceAll('%', '')) ?? -1;
