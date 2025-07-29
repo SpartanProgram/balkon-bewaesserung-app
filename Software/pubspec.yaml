@@ -34,6 +34,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  
+  percent_indicator: ^4.2.2
+
+
   flutter_local_notifications: 15.1.1
   url_launcher: ^6.2.5
 
