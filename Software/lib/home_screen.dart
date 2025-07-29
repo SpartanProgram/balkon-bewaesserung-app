@@ -5,7 +5,7 @@ import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
 import '../services/sensor_name_service.dart';
 import 'widgets/water_level_droplet.dart';
-import 'package:percent_indicator/percent_indicator.dart';
+import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -59,23 +59,46 @@ Widget _buildMoistureCard(int moisture) {
 
   return Column(
     children: [
-      Text(
-        "Feuchtigkeitsstand",
+      const Text(
+        "💧 Feuchtigkeitsstand",
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
       const SizedBox(height: 8),
-      CircularPercentIndicator(
-        radius: 70.0,
-        lineWidth: 12.0,
-        animation: true,
-        percent: percent,
-        center: Text(
-          "$moisture%",
-          style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+      Material(
+        elevation: 6,
+        shape: const CircleBorder(),
+        shadowColor: Colors.black45,
+        child: ClipOval(
+          child: SizedBox(
+            width: 120,
+            height: 120,
+            child: LiquidCircularProgressIndicator(
+              value: percent,
+              valueColor: AlwaysStoppedAnimation(_getMoistureColor(moisture)),
+              backgroundColor: Colors.grey.shade200,
+              borderColor: Colors.grey.shade400,
+              borderWidth: 2.0,
+              direction: Axis.vertical,
+              center: Tooltip(
+                message: "Feuchtigkeit: $moisture%",
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: Text(
+                    "$moisture%",
+                    key: ValueKey<int>(moisture), // Important: must change when value changes
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        circularStrokeCap: CircularStrokeCap.round,
-        progressColor: _getMoistureColor(moisture),
-        backgroundColor: Colors.grey.shade300,
       ),
     ],
   );
