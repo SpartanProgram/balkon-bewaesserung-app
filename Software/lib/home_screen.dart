@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
 import '../services/sensor_name_service.dart';
-import 'widgets/animated_water_level.dart'; // <-- Added import
+import 'widgets/water_level_droplet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-  
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -16,6 +16,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   int _currentSensorIndex = 0;
+
+final Map<String, String> plantNameToAsset = {
+  'Basilikum': 'assets/plants/basilikum.png',
+  'Tomate': 'assets/plants/tomate.png',
+  'Paprika': 'assets/plants/paprika.png',
+  'Chili': 'assets/plants/chili.png',
+  'Salat': 'assets/plants/salat.png',
+  'Erdbeere': 'assets/plants/erdbeere.png',
+  'Minze': 'assets/plants/minze.png',
+  'Knoblauch': 'assets/plants/knoblauch.png',
+};
+
 
   @override
   void initState() {
@@ -38,71 +50,53 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-    Widget _animatedMoistureCard(int moisture) {
-    final double moistureValue = moisture.clamp(0, 100) / 100;
-    final Color moistureColor = moisture >= 60
-        ? Colors.green
-        : moisture >= 30
-            ? Colors.orange
-            : Colors.redAccent;
+  Widget _plantBackground(String plantName, Widget child) {
+    String emoji = plantName.trim().split(" ").first;
+    String asset = "assets/placeholder.png";
 
+
+    if (plantNameToAsset.containsKey(emoji)) {
+      asset = plantNameToAsset[emoji]!;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(asset),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.1), BlendMode.darken),
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: child,
+    );
+  }
+
+  Widget _animatedWateringCard(String lastWateredText) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: Colors.green.shade50,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 70,
-                height: 70,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: moistureValue),
-                  duration: const Duration(milliseconds: 800),
-                  builder: (context, value, _) {
-                    return CircularProgressIndicator(
-                      value: value,
-                      strokeWidth: 8,
-                      valueColor: AlwaysStoppedAnimation<Color>(moistureColor),
-                      backgroundColor: Colors.grey.shade300,
-                    );
-                  },
-                ),
-              ),
-              Text(
-                "$moisture%",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 20),
+          const Icon(Icons.history, color: Colors.green, size: 36),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Bodenfeuchtigkeit",
+                  "Letzte Bewässerung",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  moisture >= 60
-                      ? "Sehr gut"
-                      : moisture >= 30
-                          ? "OK"
-                          : "Trocken",
-                  style: TextStyle(
-                    color: moistureColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  lastWateredText,
+                  style: const TextStyle(fontSize: 16),
                 ),
               ],
             ),
@@ -112,83 +106,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _plantBackground(String plantName, Widget child) {
-  String emoji = plantName.trim().split(" ").first;
-  String asset = "assets/placeholder.jpg"; // fallback
-
-  final Map<String, String> emojiToAsset = {
-    '🌱': 'assets/plants/basilikum.jpg',
-    '🍅': 'assets/plants/tomate.jpg',
-    '🫑': 'assets/plants/paprika.jpg',
-    '🌶': 'assets/plants/chili.jpg',
-    '🥬': 'assets/plants/salat.jpg',
-    '🍓': 'assets/plants/erdbeere.jpg',
-    '🌼': 'assets/plants/minze.jpg',
-    '🧅': 'assets/plants/schnittlauch.jpg',
-  };
-
-  if (emojiToAsset.containsKey(emoji)) {
-    asset = emojiToAsset[emoji]!;
-  }
-
-  return Container(
-    decoration: BoxDecoration(
-      image: DecorationImage(
-        image: AssetImage(asset),
-        fit: BoxFit.cover,
-        colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.1), BlendMode.darken),
-      ),
-      borderRadius: BorderRadius.circular(16),
-    ),
-    padding: const EdgeInsets.all(16),
-    child: child,
-  );
-}
-
-
-      Widget _animatedWateringCard(String lastWateredText) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.green.shade50,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.history, color: Colors.green, size: 36),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Letzte Bewässerung",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    lastWateredText,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    
-
-    @override
   @override
   Widget build(BuildContext context) {
     final sensorData = context.watch<SensorDataProvider>().sensorData;
     final isConnected = context.watch<SensorDataProvider>().isConnected;
-
-    final cardColor = Theme.of(context).cardColor;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
 
     return CustomScaffold(
       title: 'Hauptmenü',
@@ -227,10 +150,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ],
             ),
             const SizedBox(height: 20),
-
-            // Sensor Page Slider
             SizedBox(
-              height: 420, // Adjust as needed
+              height: 520,
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: sensorData.length,
@@ -245,18 +166,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     future: SensorNameService.getName(index, fallback: sensor["sensor"]!),
                     builder: (context, snapshot) {
                       final sensorName = snapshot.data ?? sensor["sensor"]!;
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 24), // Prevent cut off
-                        child: _plantBackground(
-                          sensorName,
-                          Column(
+                      final cleanedName = sensorName.trim().split(" ").first;
+                      final moisture = int.tryParse(sensor["moisture"]!.replaceAll('%', '')) ?? 0;
+                      return KeyedSubtree(
+                        key: ValueKey(sensorName), // Force full widget rebuild if name changes
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const SizedBox(height: 8),
+                              if (plantNameToAsset.containsKey(cleanedName)) ...[
+                                SizedBox(
+                                  width: 120,
+                                  height: 120,
+                                  child: Image.asset(
+                                    plantNameToAsset[cleanedName]!,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.error_outline, size: 48),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(sensorName, style: const TextStyle(fontSize: 22)),
+                                  Text(
+                                    sensorName,
+                                    style: const TextStyle(fontSize: 22),
+                                  ),
                                   const SizedBox(width: 8),
                                   IconButton(
                                     icon: const Icon(Icons.edit, size: 20),
@@ -265,12 +203,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ],
                               ),
                               const SizedBox(height: 16),
-                              _animatedMoistureCard(
-                                int.tryParse(sensor["moisture"]!.replaceAll('%', '')) ?? 0
-                              ),
-                              const SizedBox(height: 12),
+
+                              // Add other widgets like moisture bar etc. here
                               _animatedWateringCard(sensor["lastWatered"]!),
-                              const SizedBox(height: 12),                              ElevatedButton(
+                              const SizedBox(height: 12),
+                              ElevatedButton(
                                 onPressed: () {
                                   context.read<SensorDataProvider>().triggerWatering(sensorId: index);
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -279,43 +216,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 },
                                 child: const Text("Bewässern"),
                               ),
-                              const SizedBox(height: 12), // optional spacing
-
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: List.generate(sensorData.length, (dotIndex) {
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                                    child: Icon(
-                                      _currentSensorIndex == dotIndex
-                                          ? Icons.circle
-                                          : Icons.circle_outlined,
-                                      size: 10,
-                                      color: _currentSensorIndex == dotIndex
-                                          ? (isDark ? Colors.white : Colors.black)
-                                          : (isDark ? Colors.white54 : Colors.grey),
-                                    ),
-                                  );
-                                }),
-                              ),
-                            ],
-                          ),
+                              const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(sensorData.length, (dotIndex) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Icon(
+                                    _currentSensorIndex == dotIndex
+                                        ? Icons.circle
+                                        : Icons.circle_outlined,
+                                    size: 10,
+                                    color: _currentSensorIndex == dotIndex
+                                        ? (isDark ? Colors.white : Colors.black)
+                                        : (isDark ? Colors.white54 : Colors.grey),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ],
                         ),
-                      );
+                        ),
+                      );   
                     },
                   );
                 },
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            if (sensorData.isNotEmpty)
-              _waterLevelIndicator(sensorData[0]["waterLevel"]!),
-
+                        const SizedBox(height: 16),
+            if (sensorData.isNotEmpty) ...[
+              const Text(
+                "Wasserstand",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              WaterLevelDroplet(
+                waterPercent: int.tryParse(
+                      sensorData[_currentSensorIndex]["waterLevel"]!.replaceAll('%', '')
+                    ) ?? 0,
+              ),
+            ],
             const SizedBox(height: 16),
-
-            // Manual All Water Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -346,166 +287,131 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _showRenameDialog(BuildContext context, int sensorIndex) async {
-    final List<String> plantOptions = [
-      '🌱 Basilikum',
-      '🍅 Tomate',
-      '🫑 Paprika',
-      '🌶 Chili',
-      '🥬 Salat',
-      '🍓 Erdbeere',
-      '🌼 Minze',
-      '🧅 Schnittlauch',
-      '🔤 Benutzerdefiniert',
-    ];
+void _showRenameDialog(BuildContext context, int sensorIndex) async {
+  final Map<String, String> plantOptions = {
+    'Basilikum': 'basilikum.png',
+    'Tomate': 'tomate.png',
+    'Paprika': 'paprika.png',
+    'Chili': 'chili.png',
+    'Salat': 'salat.png',
+    'Erdbeere': 'erdbeere.png',
+    'Minze': 'minze.png',
+    'Knoblauch': 'knoblauch.png',
+    'Benutzerdefiniert': '', // No image
+  };
 
-    String selectedOption = plantOptions[0];
-    String customName = '';
+  String selectedOption = plantOptions.keys.first;
+  String customName = '';
+  final currentName = await SensorNameService.getName(sensorIndex, fallback: 'Sensor ${sensorIndex + 1}');
+  final cleanedName = currentName.trim().split(" ").first;
 
-    final currentName = await SensorNameService.getName(sensorIndex, fallback: 'Sensor ${sensorIndex + 1}');
-    if (plantOptions.contains(currentName)) {
-      selectedOption = currentName;
-    } else {
-      selectedOption = '🔤 Benutzerdefiniert';
-      customName = currentName;
-    }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Sensor umbenennen"),
-          content: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedOption,
-                    items: plantOptions.map((plant) {
-                      return DropdownMenuItem(
-                        value: plant,
-                        child: Text(plant),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setDialogState(() {
-                        selectedOption = value!;
-                        if (value != '🔤 Benutzerdefiniert') {
-                          customName = '';
-                        }
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      labelText: "Pflanze auswählen",
+  if (plantOptions.containsKey(currentName)) {
+    selectedOption = currentName;
+  } else {
+    selectedOption = 'Benutzerdefiniert';
+    customName = currentName;
+  }
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Sensor umbenennen"),
+        content: StatefulBuilder(
+          builder: (context, setDialogState) {
+            final imageAsset = plantOptions[selectedOption];
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (plantNameToAsset.containsKey(cleanedName))
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      plantNameToAsset[cleanedName]!,
+                      width: 28,
+                      height: 28,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.error_outline),
                     ),
                   ),
-                  if (selectedOption == '🔤 Benutzerdefiniert')
-                    TextField(
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        labelText: "Individueller Name",
+                  const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedOption,
+                  items: plantOptions.entries.map((entry) {
+                    final label = entry.key;
+                    final asset = entry.value;
+
+                    return DropdownMenuItem(
+                      value: label,
+                      child: Row(
+                        children: [
+                          if (asset.isNotEmpty)
+                            Image.asset('assets/plants/$asset', width: 30, height: 30),
+                          if (asset.isNotEmpty) const SizedBox(width: 8),
+                          Text(label),
+                        ],
                       ),
-                      onChanged: (value) => customName = value,
-                      controller: TextEditingController(text: customName),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedOption = value!;
+                      if (selectedOption != 'Benutzerdefiniert') {
+                        customName = '';
+                      }
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    labelText: "Pflanze auswählen",
+                  ),
+                ),
+                if (selectedOption == 'Benutzerdefiniert')
+                  TextField(
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: "Individueller Name",
                     ),
-                ],
-              );
-            },
+                    onChanged: (value) => customName = value,
+                    controller: TextEditingController(text: customName),
+                  ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Abbrechen"),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Abbrechen"),
-            ),
-            ElevatedButton(
+          ElevatedButton(
               onPressed: () async {
-                final finalName = selectedOption == '🔤 Benutzerdefiniert'
+                final finalName = selectedOption == 'Benutzerdefiniert'
                     ? customName.trim()
                     : selectedOption;
 
                 if (finalName.isNotEmpty) {
                   await SensorNameService.saveName(sensorIndex, finalName);
                   Navigator.of(context).pop();
-                  setState(() {});
+
+                  // Re-fetch the name and update UI
+                  final newName = await SensorNameService.getName(sensorIndex, fallback: finalName);
+                  setState(() {
+                    // trigger rebuild with updated name
+                    // no need to store locally because it's fetched inside FutureBuilder
+                  });
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('🌿 Sensor ${sensorIndex + 1} als "$finalName" gespeichert')),
                   );
                 }
               },
-              child: const Text("Speichern"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _waterLevelIndicator(String waterLevelStr) {
-    int level = int.tryParse(waterLevelStr.replaceAll('%', '')) ?? -1;
-    double levelPercent = level.clamp(0, 100) / 100;
-
-    final cardColor = Theme.of(context).cardColor;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
-
-    String statusText;
-    if (level >= 70) {
-      statusText = "Wasserstand: In Ordnung";
-    } else if (level >= 30) {
-      statusText = "Wasserstand: Mittel";
-    } else if (level >= 0) {
-      statusText = "Wasserstand: Niedrig";
-    } else {
-      statusText = "Wasserstand: --";
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: levelPercent),
-            duration: const Duration(milliseconds: 800),
-            builder: (context, value, _) {
-              return AnimatedWaterLevel(levelPercent: value);
-            },
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              statusText,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: textColor),
-            ),
-          ),
-          Text(
-            "$level%",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+            child: const Text("Speichern"),
           ),
         ],
-      ),
-    );
-  }
-
-  static Widget _infoCard(String title, String value, {required Color cardColor, required Color textColor}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: TextStyle(fontSize: 18, color: textColor)),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
-        ],
-      ),
-    );
-  }
+      );
+    },
+  );
+}
 }
