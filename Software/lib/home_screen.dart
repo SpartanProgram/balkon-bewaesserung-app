@@ -6,6 +6,7 @@ import 'widgets/sensor_data_provider.dart';
 import '../services/sensor_name_service.dart';
 import 'widgets/water_level_droplet.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
+import 'package:lottie/lottie.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -163,6 +164,7 @@ Color _getMoistureColor(int moisture) {
     final sensorData = context.watch<SensorDataProvider>().sensorData;
     final isConnected = context.watch<SensorDataProvider>().isConnected;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    bool isWatering = false;
 
 
     return CustomScaffold(
@@ -257,15 +259,83 @@ Color _getMoistureColor(int moisture) {
                               _buildMoistureCard(moisture),
                               const SizedBox(height: 12),
                               _animatedWateringCard(sensor["lastWatered"]!),
-                              const SizedBox(height: 12),
-                              ElevatedButton(
-                                onPressed: () {
-                                  context.read<SensorDataProvider>().triggerWatering(sensorId: index);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("🚿 $sensorName bewässert")),
+                              const SizedBox(height: 12),                            
+                              StatefulBuilder(
+                                builder: (context, setState) {
+                                  return ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isWatering ? Colors.grey : Colors.green[700],
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    ),
+                                    onPressed: isWatering
+                                        ? null
+                                        : () async {
+                                            HapticFeedback.mediumImpact();
+                                            setState(() => isWatering = true);
+
+                                            // Call watering
+                                            await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
+
+                                            // Show success dialog with animation
+                                            showDialog(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (_) => AlertDialog(
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                                contentPadding: const EdgeInsets.all(24),
+                                                content: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Lottie.asset(
+                                                      'assets/animations/watering.json',
+                                                      width: 120,
+                                                      repeat: false,
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    Text(
+                                                      "$sensorName wurde bewässert 💧",
+                                                      style: const TextStyle(
+                                                        fontSize: 18,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                            await Future.delayed(const Duration(seconds: 2));
+                                            Navigator.of(context).pop();
+
+                                            setState(() => isWatering = false);
+                                          },
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 300),
+                                      child: isWatering
+                                          ? Row(
+                                              key: const ValueKey(1),
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: const [
+                                                SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                SizedBox(width: 10),
+                                                Text("Wird bewässert..."),
+                                              ],
+                                            )
+                                          : const Text(
+                                              "Bewässern",
+                                              key: ValueKey(2),
+                                            ),
+                                    ),
                                   );
                                 },
-                                child: const Text("Bewässern"),
                               ),
                               const SizedBox(height: 12),
                             Row(
