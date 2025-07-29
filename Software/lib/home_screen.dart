@@ -583,29 +583,19 @@ Color _getMoistureColor(int moisture) {
 
                 if (finalName.isNotEmpty) {
                   await SensorNameService.saveName(sensorIndex, finalName);
-                  Navigator.of(context).pop(); // close rename dialog
+                  Navigator.of(context).pop(); // Close the rename dialog
 
-                  // Show success animation dialog
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Lottie.asset('assets/animations/success.json', height: 80),
-                            const SizedBox(height: 12),
-                            Text('🌿 "$finalName" wurde gespeichert!'),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-
-                  await Future.delayed(const Duration(seconds: 2));
-                  if (context.mounted) Navigator.of(context).pop();
-
+                  // Show success dialog that closes itself
+                    showGeneralDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      barrierColor: Colors.black54,
+                      transitionDuration: const Duration(milliseconds: 200),
+                      pageBuilder: (_, __, ___) => const SizedBox.shrink(), // required but unused
+                      transitionBuilder: (context, animation, _, child) {
+                        return _FadingSuccessDialog(finalName: finalName);
+                      },
+                    );                                         
                   setState(() {
                     // Trigger refresh
                   });
@@ -616,6 +606,66 @@ Color _getMoistureColor(int moisture) {
           ],
         );
       },
+    );
+  }
+}
+
+
+
+class _FadingSuccessDialog extends StatefulWidget {
+  final String finalName;
+
+  const _FadingSuccessDialog({required this.finalName});
+
+  @override
+  State<_FadingSuccessDialog> createState() => _FadingSuccessDialogState();
+}
+
+class _FadingSuccessDialogState extends State<_FadingSuccessDialog> {
+  double opacity = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => opacity = 0.0);
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 2800), () {
+      if (mounted) {
+        Navigator.of(context).pop(); // close after fade
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: opacity, end: opacity),
+        duration: const Duration(milliseconds: 600),
+        builder: (context, value, child) {
+          return Opacity(opacity: value, child: child);
+        },
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Lottie.asset('assets/animations/success.json', height: 80),
+              const SizedBox(height: 12),
+              Text(
+                '🌿 "${widget.finalName}" wurde gespeichert!',
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
