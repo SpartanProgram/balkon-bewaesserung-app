@@ -4,8 +4,7 @@ import 'package:provider/provider.dart';
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
 import '../services/sensor_name_service.dart';
-
-
+import 'widgets/animated_water_level.dart'; // <-- Added import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,10 +34,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       final provider = context.read<SensorDataProvider>();
-      provider.reconnectIfNeeded(); // This assumes you have reconnect logic in the provider
+      provider.reconnectIfNeeded();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +54,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         children: [
           const Align(
             alignment: Alignment.centerLeft,
-            child: Text('Automatische Balkonpflanzen-\nBewässerung',
+            child: Text(
+              'Automatische Balkonpflanzen-\nBewässerung',
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
@@ -82,10 +81,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ],
           ),
-
           const SizedBox(height: 30),
-
-          // Sensor Page Slider
           Expanded(
             child: PageView.builder(
               controller: _pageController,
@@ -103,30 +99,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       FutureBuilder<String>(
-                      future: SensorNameService.getName(index, fallback: sensor["sensor"]!),
-                      builder: (context, snapshot) {
-                        final sensorName = snapshot.data ?? sensor["sensor"]!;
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              sensorName,
-                              style: const TextStyle(fontSize: 22),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () => _showRenameDialog(context, index),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-
+                        future: SensorNameService.getName(index, fallback: sensor["sensor"]!),
+                        builder: (context, snapshot) {
+                          final sensorName = snapshot.data ?? sensor["sensor"]!;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                sensorName,
+                                style: const TextStyle(fontSize: 22),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                onPressed: () => _showRenameDialog(context, index),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                       const SizedBox(height: 16),
                       _infoCard("Bodenfeuchtigkeit", sensor["moisture"]!, cardColor: cardColor, textColor: textColor),
-                      _infoCard("Letzte Bewässerung", sensor["lastWatered"]!, cardColor: cardColor, textColor: textColor),                      
+                      _infoCard("Letzte Bewässerung", sensor["lastWatered"]!, cardColor: cardColor, textColor: textColor),
                       ElevatedButton(
                         onPressed: () {
                           context.read<SensorDataProvider>().triggerWatering(sensorId: index);
@@ -146,8 +141,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               _currentSensorIndex == dotIndex
                                   ? Icons.circle
                                   : Icons.circle_outlined,
-                                  size: 10,
-                                  color: _currentSensorIndex == dotIndex
+                              size: 10,
+                              color: _currentSensorIndex == dotIndex
                                   ? (isDark ? Colors.white : Colors.black)
                                   : (isDark ? Colors.white54 : Colors.grey),
                             ),
@@ -157,18 +152,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ],
                   ),
                 );
-              }
+              },
             ),
           ),
-
           if (sensorData.isNotEmpty)
             _waterLevelIndicator(sensorData[0]["waterLevel"]!),
           const SizedBox(height: 8),
-
-          // Dot Indicator
-
           const SizedBox(height: 24),
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -182,13 +172,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onPressed: () {
                 HapticFeedback.heavyImpact();
                 context.read<SensorDataProvider>().triggerWatering();
-
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("🚿 Bewässerung gestartet")),
+                  const SnackBar(content: Text("🚿 Alle Pflanzen manuell bewässert")),
                 );
               },
               child: const Text(
-                'Alle bewässern',
+                'Alle Pflanzen manuell bewässern',
                 style: TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
@@ -199,122 +188,116 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-void _showRenameDialog(BuildContext context, int sensorIndex) async {
-  final List<String> plantOptions = [
-    '🌱 Basilikum',
-    '🍅 Tomate',
-    '🫑 Paprika',
-    '🌶 Chili',
-    '🥬 Salat',
-    '🍓 Erdbeere',
-    '🌼 Minze',
-    '🧅 Schnittlauch',
-    '🔤 Benutzerdefiniert',
-  ];
+  void _showRenameDialog(BuildContext context, int sensorIndex) async {
+    final List<String> plantOptions = [
+      '🌱 Basilikum',
+      '🍅 Tomate',
+      '🫑 Paprika',
+      '🌶 Chili',
+      '🥬 Salat',
+      '🍓 Erdbeere',
+      '🌼 Minze',
+      '🧅 Schnittlauch',
+      '🔤 Benutzerdefiniert',
+    ];
 
-  String selectedOption = plantOptions[0];
-  String customName = '';
+    String selectedOption = plantOptions[0];
+    String customName = '';
 
-  final currentName = await SensorNameService.getName(sensorIndex, fallback: 'Sensor ${sensorIndex + 1}');
-  if (plantOptions.contains(currentName)) {
-    selectedOption = currentName;
-  } else {
-    selectedOption = '🔤 Benutzerdefiniert';
-    customName = currentName;
-  }
+    final currentName = await SensorNameService.getName(sensorIndex, fallback: 'Sensor ${sensorIndex + 1}');
+    if (plantOptions.contains(currentName)) {
+      selectedOption = currentName;
+    } else {
+      selectedOption = '🔤 Benutzerdefiniert';
+      customName = currentName;
+    }
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text("Sensor umbenennen"),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  value: selectedOption,
-                  items: plantOptions.map((plant) {
-                    return DropdownMenuItem(
-                      value: plant,
-                      child: Text(plant),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedOption = value!;
-                      if (value != '🔤 Benutzerdefiniert') {
-                        customName = '';
-                      }
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: "Pflanze auswählen",
-                  ),
-                ),
-                if (selectedOption == '🔤 Benutzerdefiniert')
-                  TextField(
-                    autofocus: true,
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Sensor umbenennen"),
+          content: StatefulBuilder(
+            builder: (context, setDialogState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: selectedOption,
+                    items: plantOptions.map((plant) {
+                      return DropdownMenuItem(
+                        value: plant,
+                        child: Text(plant),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        selectedOption = value!;
+                        if (value != '🔤 Benutzerdefiniert') {
+                          customName = '';
+                        }
+                      });
+                    },
                     decoration: const InputDecoration(
-                      labelText: "Individueller Name",
+                      labelText: "Pflanze auswählen",
                     ),
-                    onChanged: (value) => customName = value,
-                    controller: TextEditingController(text: customName),
                   ),
-              ],
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text("Abbrechen"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final finalName = selectedOption == '🔤 Benutzerdefiniert'
-                  ? customName.trim()
-                  : selectedOption;
-
-              if (finalName.isNotEmpty) {
-                await SensorNameService.saveName(sensorIndex, finalName);
-                Navigator.of(context).pop();
-                setState(() {});
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('🌿 Sensor ${sensorIndex + 1} als "$finalName" gespeichert')),
-                );
-              }
+                  if (selectedOption == '🔤 Benutzerdefiniert')
+                    TextField(
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        labelText: "Individueller Name",
+                      ),
+                      onChanged: (value) => customName = value,
+                      controller: TextEditingController(text: customName),
+                    ),
+                ],
+              );
             },
-            child: const Text("Speichern"),
           ),
-        ],
-      );
-    },
-  );
-}
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Abbrechen"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final finalName = selectedOption == '🔤 Benutzerdefiniert'
+                    ? customName.trim()
+                    : selectedOption;
+
+                if (finalName.isNotEmpty) {
+                  await SensorNameService.saveName(sensorIndex, finalName);
+                  Navigator.of(context).pop();
+                  setState(() {});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('🌿 Sensor ${sensorIndex + 1} als "$finalName" gespeichert')),
+                  );
+                }
+              },
+              child: const Text("Speichern"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Widget _waterLevelIndicator(String waterLevelStr) {
     int level = int.tryParse(waterLevelStr.replaceAll('%', '')) ?? -1;
+    double levelPercent = level.clamp(0, 100) / 100;
 
     final cardColor = Theme.of(context).cardColor;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
-    IconData icon = Icons.water_drop;
-    Color iconColor;
     String statusText;
-
     if (level >= 70) {
-      iconColor = Colors.green;
       statusText = "Wasserstand: In Ordnung";
     } else if (level >= 30) {
-      iconColor = Colors.orange;
       statusText = "Wasserstand: Mittel";
     } else if (level >= 0) {
-      iconColor = Colors.red;
       statusText = "Wasserstand: Niedrig";
     } else {
-      iconColor = Colors.grey;
       statusText = "Wasserstand: --";
     }
 
@@ -327,11 +310,23 @@ void _showRenameDialog(BuildContext context, int sensorIndex) async {
       ),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 28),
-          const SizedBox(width: 12),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: levelPercent),
+            duration: const Duration(milliseconds: 800),
+            builder: (context, value, _) {
+              return AnimatedWaterLevel(levelPercent: value);
+            },
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              statusText,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: textColor),
+            ),
+          ),
           Text(
-            statusText,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: textColor),
+            "$level%",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
           ),
         ],
       ),
@@ -349,14 +344,8 @@ void _showRenameDialog(BuildContext context, int sensorIndex) async {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: TextStyle(fontSize: 18, color: textColor),
-          ),
-          Text(
-            value,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
-          ),
+          Text(title, style: TextStyle(fontSize: 18, color: textColor)),
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
         ],
       ),
     );
