@@ -52,7 +52,7 @@ const char* root_ca = \
 "-----END CERTIFICATE-----";
 
 // Pins
-const int moisturePins[3] = {35, 32, 33};
+const int moisturePins[4] = {35, 32, 33, 34};
 const int pumpPins[3] = {25, 26, 27};
 
 // Timing
@@ -61,14 +61,14 @@ unsigned long lastPublishTime = 0;
 const unsigned long calibrationPeriod = 20000;
 
 // Pump control timing
-const unsigned long pumpDuration = 15000;  // 15 seconds
+const unsigned long pumpDuration = 15000;  // n000 Sec
 unsigned long pumpStartTimes[3] = {0, 0, 0};  // Track when each pump was turned on
 bool pumpActive[3] = {false, false, false};  // Track pump state
 
 // Preferences
 Preferences preferences;
-int airValues[3];
-int waterValues[3];
+int airValues[4];
+int waterValues[4];
 unsigned long startTime;
 bool isCalibrated;
 
@@ -93,7 +93,7 @@ void setup() {
   preferences.begin("moisture", false);
 
   isCalibrated = preferences.getBool("isCalibrated", false);
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     airValues[i] = preferences.getInt(("air" + String(i)).c_str(), 4095);
     waterValues[i] = preferences.getInt(("water" + String(i)).c_str(), 0);
   }
@@ -120,14 +120,14 @@ void loop() {
 
   // Auto-calibration logic
   if (!isCalibrated && millis() - startTime < calibrationPeriod) {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
       int value = analogRead(moisturePins[i]);
       waterValues[i] = max(waterValues[i], value);
       airValues[i] = min(airValues[i], value);
     }
     Serial.println("Calibrating...");
   } else if (!isCalibrated) {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
       preferences.putInt(("air" + String(i)).c_str(), airValues[i]);
       preferences.putInt(("water" + String(i)).c_str(), waterValues[i]);
     }
@@ -155,7 +155,7 @@ void loop() {
 void publishSensorData() {
   StaticJsonDocument<200> doc;
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     int value = analogRead(moisturePins[i]);
     int percent = map(value, airValues[i], waterValues[i], 100, 0);
     percent = constrain(percent, 0, 100);
@@ -171,32 +171,61 @@ void publishSensorData() {
 }
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("MQTT message arrived [");
+  Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
 
-  payload[length] = '\0'; // Null-terminate
-  String msg = String((char*)payload);
-  Serial.println(msg);
+  // Convert payload to string
+  String json;
+  for (unsigned int i = 0; i < length; i++) {
+    json += (char)payload[i];
+  }
+  Serial.println(json);
 
-  StaticJsonDocument<128> doc;
-  DeserializationError error = deserializeJson(doc, payload);
-
+  // Parse JSON
+  StaticJsonDocument<256> doc;
+  DeserializationError error = deserializeJson(doc, json);
   if (error) {
-    Serial.println("Failed to parse control JSON");
+    Serial.print("JSON parsing failed: ");
+    Serial.println(error.c_str());
     return;
   }
 
-  for (int i = 0; i < 3; i++) {
-  if (doc["pump"][i]) {
-    digitalWrite(pumpPins[i], HIGH);
-    pumpStartTimes[i] = millis();
-    pumpActive[i] = true;
-    Serial.printf("Pump %d ON (auto-off in 15s)\n", i + 1);
+  // Safe pump control
+  if (doc.containsKey("pump") && doc["pump"].is<JsonArray>()) {
+    JsonArray pumpArray = doc["pump"].as<JsonArray>();
+
+    for (int i = 0; i < 3; i++) {
+      bool state = false;
+
+      if (i < pumpArray.size()) {
+        JsonVariant element = pumpArray[i];
+        if (element.is<bool>()) {
+          state = element.as<bool>();
+        } else {
+          Serial.printf("Pump %d: Invalid type\n", i + 1);
+        }
+      } else {
+        Serial.printf("Pump %d: No value in array\n", i + 1);
+      }
+
+      digitalWrite(pumpPins[i], state ? HIGH : LOW);
+      pumpActive[i] = state;
+
+      if (state) {
+        pumpStartTimes[i] = millis();
+        Serial.printf("Pump %d ON (auto-off in 15s)\n", i + 1);
+      } else {
+        Serial.printf("Pump %d OFF (manual/default)\n", i + 1);
+      }
+    }
+  } else {
+    Serial.println("Invalid or missing 'pump' array in MQTT message.");
   }
 }
 
-}
+
+
 
 void setup_wifi() {
   Serial.println("Connecting to WiFi...");
