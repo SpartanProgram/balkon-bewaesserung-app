@@ -271,48 +271,45 @@ Color _getMoistureColor(int moisture) {
                                       padding: const EdgeInsets.symmetric(vertical: 16),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                     ),
-                                    onPressed: isWatering
-                                        ? null
-                                        : () async {
-                                            HapticFeedback.mediumImpact();
-                                            setState(() => isWatering = true);
+                                      onPressed: isWatering
+                                          ? null
+                                          : () async {
+                                              HapticFeedback.mediumImpact();
+                                              setState(() => isWatering = true);
 
-                                            // Call watering
-                                            await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
+                                              // 🔊 Play watering sound
+                                              final player = AudioPlayer();
+                                              await player.play(AssetSource('sounds/watering.mp3'));
 
-                                            // Show success dialog with animation
-                                            showDialog(
-                                              context: context,
-                                              barrierDismissible: false,
-                                              builder: (_) => AlertDialog(
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                                contentPadding: const EdgeInsets.all(24),
-                                                content: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Lottie.asset(
-                                                      'assets/animations/watering.json',
-                                                      width: 120,
-                                                      repeat: false,
-                                                    ),
-                                                    const SizedBox(height: 12),
-                                                    Text(
-                                                      "$sensorName wurde bewässert 💧",
-                                                      style: const TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight: FontWeight.bold,
+                                              await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
+
+                                              // Show dialog
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (_) => AlertDialog(
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                                  contentPadding: const EdgeInsets.all(24),
+                                                  content: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Lottie.asset('assets/animations/watering.json', width: 120, repeat: false),
+                                                      const SizedBox(height: 12),
+                                                      Text(
+                                                        "$sensorName wurde bewässert 💧",
+                                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                                        textAlign: TextAlign.center,
                                                       ),
-                                                      textAlign: TextAlign.center,
-                                                    ),
-                                                  ],
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
-                                            );
-                                            await Future.delayed(const Duration(seconds: 2));
-                                            Navigator.of(context).pop();
+                                              );
 
-                                            setState(() => isWatering = false);
-                                          },
+                                              await Future.delayed(const Duration(seconds: 2));
+                                              if (context.mounted) Navigator.of(context).pop();
+
+                                              setState(() => isWatering = false);
+                                            },
                                     child: AnimatedSwitcher(
                                       duration: const Duration(milliseconds: 300),
                                       child: isWatering
@@ -399,10 +396,12 @@ Color _getMoistureColor(int moisture) {
                               HapticFeedback.heavyImpact();
                               setState(() => isGlobalWatering = true);
 
-                              // Trigger watering all
+                              // 🔊 Play watering sound
+                              final player = AudioPlayer();
+                              await player.play(AssetSource('sounds/watering.mp3'));
+
                               await context.read<SensorDataProvider>().triggerWatering();
 
-                              // Show animation dialog
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,
@@ -412,11 +411,7 @@ Color _getMoistureColor(int moisture) {
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Lottie.asset(
-                                        'assets/animations/watering_all.json',
-                                        width: 160,
-                                        repeat: false,
-                                      ),
+                                      Lottie.asset('assets/animations/watering_all.json', width: 160, repeat: false),
                                       const SizedBox(height: 12),
                                       const Text(
                                         "Alle Pflanzen wurden bewässert 💧",
