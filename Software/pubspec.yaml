@@ -34,7 +34,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  
+  audioplayers: ^5.2.1
   percent_indicator: ^4.2.2
 
   lottie: ^2.7.0
@@ -74,6 +74,7 @@ flutter:
   assets:
     - assets/plants/
     - assets/animations/
+    - assets/sounds/
 
 
   # To add assets to your application, add an assets section, like this:

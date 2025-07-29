@@ -7,6 +7,7 @@ import '../services/sensor_name_service.dart';
 import 'widgets/water_level_droplet.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 import 'package:lottie/lottie.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -623,21 +624,28 @@ class _FadingSuccessDialog extends StatefulWidget {
 
 class _FadingSuccessDialogState extends State<_FadingSuccessDialog> {
   double opacity = 1.0;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
+
+    // 🔊 Play sound on open
+    _audioPlayer.play(AssetSource('sounds/success.mp3'));
+
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => opacity = 0.0);
-      }
+      if (mounted) setState(() => opacity = 0.0);
     });
 
     Future.delayed(const Duration(milliseconds: 2800), () {
-      if (mounted) {
-        Navigator.of(context).pop(); // close after fade
-      }
+      if (mounted) Navigator.of(context).pop();
     });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 
   @override
