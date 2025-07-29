@@ -30,6 +30,12 @@ final Map<String, String> plantNameToAsset = {
   'Knoblauch': 'assets/plants/knoblauch.png',
 };
 
+  String _moistureEmoji(int value) {
+  if (value < 30) return "🥀";
+  if (value < 60) return "🌿";
+  return "💧";
+}
+
 
   @override
   void initState() {
@@ -60,41 +66,51 @@ Widget _buildMoistureCard(int moisture) {
   return Column(
     children: [
       const Text(
-        "💧 Feuchtigkeitsstand",
+        "Feuchtigkeitsstand",
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
       const SizedBox(height: 8),
-      Material(
-        elevation: 6,
-        shape: const CircleBorder(),
-        shadowColor: Colors.black45,
-        child: ClipOval(
-          child: SizedBox(
+      Tooltip(
+        message: "Feuchtigkeit: $moisture%",
+        child: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(60),
+          child: Container(
             width: 120,
             height: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(60),
+              color: Colors.white, // background color
+            ),
             child: LiquidCircularProgressIndicator(
               value: percent,
               valueColor: AlwaysStoppedAnimation(_getMoistureColor(moisture)),
-              backgroundColor: Colors.grey.shade200,
-              borderColor: Colors.grey.shade400,
+              backgroundColor: Colors.grey.shade100,
+              borderColor: Colors.grey.shade300,
               borderWidth: 2.0,
               direction: Axis.vertical,
-              center: Tooltip(
-                message: "Feuchtigkeit: $moisture%",
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return ScaleTransition(scale: animation, child: child);
-                  },
-                  child: Text(
-                    "$moisture%",
-                    key: ValueKey<int>(moisture), // Important: must change when value changes
-                    style: const TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
+              center: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _moistureEmoji(moisture),
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: Text(
+                      "$moisture%",
+                      key: ValueKey(moisture),
+                      style: const TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
