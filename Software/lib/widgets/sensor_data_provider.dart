@@ -89,8 +89,8 @@ class SensorDataProvider extends ChangeNotifier {
         'type': 'watering',
         'sensorId': -1,
         'message': source == 'schedule'
-            ? 'Zeitplan: Alle Sensoren automatisch bewässert'
-            : 'Alle Sensoren manuell bewässert',
+            ? 'Zeitplan: Alle Pflanzen automatisch bewässert'
+            : 'Alle Pflanzen manuell bewässert',
       });
     }
     final prefs = await SharedPreferences.getInstance();
