@@ -165,6 +165,8 @@ Color _getMoistureColor(int moisture) {
     final isConnected = context.watch<SensorDataProvider>().isConnected;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     bool isWatering = false;
+    bool isGlobalWatering = false;
+
 
 
     return CustomScaffold(
@@ -378,29 +380,87 @@ Color _getMoistureColor(int moisture) {
               ),
             ],
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+              SizedBox(
+                width: double.infinity,
+                child: StatefulBuilder(
+                  builder: (context, setState) {
+                    return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isGlobalWatering ? Colors.grey : Colors.green[700],
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      onPressed: isGlobalWatering
+                          ? null
+                          : () async {
+                              HapticFeedback.heavyImpact();
+                              setState(() => isGlobalWatering = true);
+
+                              // Trigger watering all
+                              await context.read<SensorDataProvider>().triggerWatering();
+
+                              // Show animation dialog
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => AlertDialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  contentPadding: const EdgeInsets.all(24),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Lottie.asset(
+                                        'assets/animations/watering_all.json',
+                                        width: 160,
+                                        repeat: false,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      const Text(
+                                        "Alle Pflanzen wurden bewässert 💧",
+                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+
+                              await Future.delayed(const Duration(seconds: 2));
+                              if (context.mounted) Navigator.of(context).pop();
+
+                              setState(() => isGlobalWatering = false);
+                            },
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: isGlobalWatering
+                            ? Row(
+                                key: const ValueKey(1),
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text("Wird bewässert..."),
+                                ],
+                              )
+                            : const Text(
+                                'Alle Pflanzen manuell bewässern',
+                                key: ValueKey(2),
+                                style: TextStyle(fontSize: 18, color: Colors.white),
+                              ),
+                      ),
+                    );
+                  },
                 ),
-                onPressed: () {
-                  HapticFeedback.heavyImpact();
-                  context.read<SensorDataProvider>().triggerWatering();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("🚿 Alle Pflanzen manuell bewässert")),
-                  );
-                },
-                child: const Text(
-                  'Alle Pflanzen manuell bewässern',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            ),
+              ),            
             const SizedBox(height: 20),
           ],
         ),
@@ -426,7 +486,6 @@ Color _getMoistureColor(int moisture) {
     final currentName = await SensorNameService.getName(sensorIndex, fallback: 'Sensor ${sensorIndex + 1}');
     final cleanedName = currentName.trim().split(" ").first;
 
-
     if (plantOptions.containsKey(currentName)) {
       selectedOption = currentName;
     } else {
@@ -434,70 +493,80 @@ Color _getMoistureColor(int moisture) {
       customName = currentName;
     }
 
+    final TextEditingController customController = TextEditingController(text: customName);
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Sensor umbenennen"),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           content: StatefulBuilder(
             builder: (context, setDialogState) {
-              final imageAsset = plantOptions[selectedOption];
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (plantNameToAsset.containsKey(cleanedName))
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        plantNameToAsset[cleanedName]!,
-                        width: 28,
-                        height: 28,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.error_outline),
-                      ),
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Lottie.asset(
+                      'assets/animations/watering_all.json',
+                      height: 80,
+                      repeat: false,
                     ),
-                    const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: selectedOption,
-                    items: plantOptions.entries.map((entry) {
-                      final label = entry.key;
-                      final asset = entry.value;
-
-                      return DropdownMenuItem(
-                        value: label,
-                        child: Row(
-                          children: [
-                            if (asset.isNotEmpty)
-                              Image.asset('assets/plants/$asset', width: 30, height: 30),
-                            if (asset.isNotEmpty) const SizedBox(width: 8),
-                            Text(label),
-                          ],
+                    const SizedBox(height: 8),
+                    if (plantNameToAsset.containsKey(cleanedName))
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          plantNameToAsset[cleanedName]!,
+                          width: 28,
+                          height: 28,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.error_outline),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setDialogState(() {
-                        selectedOption = value!;
-                        if (selectedOption != 'Benutzerdefiniert') {
-                          customName = '';
-                        }
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      labelText: "Pflanze auswählen",
-                    ),
-                  ),
-                  if (selectedOption == 'Benutzerdefiniert')
-                    TextField(
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        labelText: "Individueller Name",
                       ),
-                      onChanged: (value) => customName = value,
-                      controller: TextEditingController(text: customName),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedOption,
+                      items: plantOptions.entries.map((entry) {
+                        final label = entry.key;
+                        final asset = entry.value;
+
+                        return DropdownMenuItem(
+                          value: label,
+                          child: Row(
+                            children: [
+                              if (asset.isNotEmpty)
+                                Image.asset('assets/plants/$asset', width: 30, height: 30),
+                              if (asset.isNotEmpty) const SizedBox(width: 8),
+                              Text(label),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedOption = value!;
+                          if (selectedOption != 'Benutzerdefiniert') {
+                            customController.clear();
+                            customName = '';
+                          }
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: "Pflanze auswählen",
+                      ),
                     ),
-                ],
+                    if (selectedOption == 'Benutzerdefiniert')
+                      TextField(
+                        controller: customController,
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          labelText: "Individueller Name",
+                        ),
+                        onChanged: (value) => customName = value,
+                      ),
+                  ],
+                ),
               );
             },
           ),
@@ -507,27 +576,41 @@ Color _getMoistureColor(int moisture) {
               child: const Text("Abbrechen"),
             ),
             ElevatedButton(
-                onPressed: () async {
-                  final finalName = selectedOption == 'Benutzerdefiniert'
-                      ? customName.trim()
-                      : selectedOption;
+              onPressed: () async {
+                final finalName = selectedOption == 'Benutzerdefiniert'
+                    ? customController.text.trim()
+                    : selectedOption;
 
-                  if (finalName.isNotEmpty) {
-                    await SensorNameService.saveName(sensorIndex, finalName);
-                    Navigator.of(context).pop();
+                if (finalName.isNotEmpty) {
+                  await SensorNameService.saveName(sensorIndex, finalName);
+                  Navigator.of(context).pop(); // close rename dialog
 
-                    // Re-fetch the name and update UI
-                    final newName = await SensorNameService.getName(sensorIndex, fallback: finalName);
-                    setState(() {
-                      // trigger rebuild with updated name
-                      // no need to store locally because it's fetched inside FutureBuilder
-                    });
+                  // Show success animation dialog
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Lottie.asset('assets/animations/success.json', height: 80),
+                            const SizedBox(height: 12),
+                            Text('🌿 "$finalName" wurde gespeichert!'),
+                          ],
+                        ),
+                      );
+                    },
+                  );
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('🌿 Sensor ${sensorIndex + 1} als "$finalName" gespeichert')),
-                    );
-                  }
-                },
+                  await Future.delayed(const Duration(seconds: 2));
+                  if (context.mounted) Navigator.of(context).pop();
+
+                  setState(() {
+                    // Trigger refresh
+                  });
+                }
+              },
               child: const Text("Speichern"),
             ),
           ],
