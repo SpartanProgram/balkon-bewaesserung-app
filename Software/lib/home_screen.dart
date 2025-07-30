@@ -49,7 +49,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     provider.wateringEnded.addListener(() {
       if (provider.wateringEnded.value && mounted) {
         if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
-        _wateringPlayer?.stop();
         provider.wateringEnded.value = false;
       }
     });
@@ -228,9 +227,6 @@ Color _getMoistureColor(int moisture) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     bool isWatering = false;
     bool isGlobalWatering = false;
-    final provider = context.read<SensorDataProvider>();
-    final wateringNotifier = provider.wateringEnded;
-
 
 
     return CustomScaffold(
@@ -341,10 +337,8 @@ Color _getMoistureColor(int moisture) {
                                               setState(() => isWatering = true);
 
                                               // 🔊 Play watering sound
-                                              await _wateringPlayer!.play(AssetSource('sounds/watering.mp3'));
-
                                               await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
-                                              _showWateringDialog("$sensorName wurde bewässert 💧", isGlobal: false);
+                                              _showWateringDialog("$sensorName wird gerade bewässert 💧", isGlobal: false);
                                               // Show dialog
                                               setState(() => isWatering = false);
                                             },
@@ -435,10 +429,8 @@ Color _getMoistureColor(int moisture) {
                               setState(() => isGlobalWatering = true);
 
                               // 🔊 Play watering sound
-                              await _wateringPlayer!.play(AssetSource('sounds/watering.mp3'));
-
                           await context.read<SensorDataProvider>().triggerWatering();
-                          _showWateringDialog("Alle Pflanzen wurden bewässert 💧", isGlobal: true);
+                          _showWateringDialog("Alle Pflanzen werden gerade bewässert 💧", isGlobal: true);
                           setState(() => isGlobalWatering = false);
                             },
                       child: AnimatedSwitcher(
