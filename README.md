@@ -34,6 +34,10 @@ Dies ist eine Flutter-App zur Überwachung und Steuerung eines automatisierten B
 flutter pub get
 flutter run
 ```
+## ⚙️ ESP Setup
+
+Beim ersten Einschalten alle sensoren in trockene Erde (0) und auch in feuchte/nass Erde für 20 Sekunde stecken
+Wenn Sensoren das Prozent nicht richtig anzeigen >>> bitte Esp Preferences resetten(reset.txt) und dann main nochmal hochladen.
 
 ## ⚙️ MQTT Setup
 
