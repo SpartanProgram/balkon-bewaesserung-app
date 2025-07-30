@@ -61,7 +61,7 @@ unsigned long lastPublishTime = 0;
 const unsigned long calibrationPeriod = 20000;
 
 // Pump control timing
-const unsigned long pumpDuration = 15000;  // n000 Sec
+const unsigned long pumpDuration = 5000;  // n000 Sec
 unsigned long pumpStartTimes[3] = {0, 0, 0};  // Track when each pump was turned on
 bool pumpActive[3] = {false, false, false};  // Track pump state
 
@@ -122,8 +122,8 @@ void loop() {
   if (!isCalibrated && millis() - startTime < calibrationPeriod) {
     for (int i = 0; i < 4; i++) {
       int value = analogRead(moisturePins[i]);
-      waterValues[i] = max(waterValues[i], value);
-      airValues[i] = min(airValues[i], value);
+      waterValues[i] = min(waterValues[i], value);
+      airValues[i] = max(airValues[i], value);
     }
     Serial.println("Calibrating...");
   } else if (!isCalibrated) {
@@ -157,7 +157,7 @@ void publishSensorData() {
 
   for (int i = 0; i < 4; i++) {
     int value = analogRead(moisturePins[i]);
-    int percent = map(value, airValues[i], waterValues[i], 100, 0);
+    int percent = map(value, airValues[i], waterValues[i], 0, 100);
     percent = constrain(percent, 0, 100);
 
     doc["sensor" + String(i + 1)] = percent;
@@ -214,7 +214,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
       if (state) {
         pumpStartTimes[i] = millis();
-        Serial.printf("Pump %d ON (auto-off in 15s)\n", i + 1);
+        Serial.printf("Pump %d ON (auto-off in 5s)\n", i + 1);
       } else {
         Serial.printf("Pump %d OFF (manual/default)\n", i + 1);
       }
