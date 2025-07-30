@@ -147,6 +147,14 @@ void loop() {
     digitalWrite(pumpPins[i], LOW);
     pumpActive[i] = false;
     Serial.printf("Pump %d OFF (timer ended)\n", i + 1);
+
+    // 🚨 to notify Flutter that watering ended
+    StaticJsonDocument<100> endDoc;
+    JsonArray pumpStates = endDoc.createNestedArray("pump");
+    for (int j = 0; j < 3; j++) pumpStates.add(pumpActive[j]);
+    char buffer[128];
+    size_t len = serializeJson(endDoc, buffer);
+    client.publish(mqttPubTopic, buffer, len);
   }
 }
 

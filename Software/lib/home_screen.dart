@@ -19,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final PageController _pageController = PageController();
+  AudioPlayer? _wateringPlayer;
   int _currentSensorIndex = 0;
 
 final Map<String, String> plantNameToAsset = {
@@ -39,11 +40,20 @@ final Map<String, String> plantNameToAsset = {
 }
 
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addObserver(this);
+
+  final provider = context.read<SensorDataProvider>();
+  provider.wateringEnded.addListener(() {
+    if (provider.wateringEnded.value) {
+      if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
+      _wateringPlayer?.stop();
+      provider.wateringEnded.value = false;
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -167,6 +177,8 @@ Color _getMoistureColor(int moisture) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     bool isWatering = false;
     bool isGlobalWatering = false;
+    final provider = context.read<SensorDataProvider>();
+    final wateringNotifier = provider.wateringEnded;
 
 
 
@@ -278,8 +290,8 @@ Color _getMoistureColor(int moisture) {
                                               setState(() => isWatering = true);
 
                                               // 🔊 Play watering sound
-                                              final player = AudioPlayer();
-                                              await player.play(AssetSource('sounds/watering.mp3'));
+                                              _wateringPlayer = AudioPlayer();
+                                              await _wateringPlayer!.play(AssetSource('sounds/watering.mp3'));
 
                                               await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
 
@@ -304,10 +316,13 @@ Color _getMoistureColor(int moisture) {
                                                   ),
                                                 ),
                                               );
-
-                                              await Future.delayed(const Duration(seconds: 2));
-                                              if (context.mounted) Navigator.of(context).pop();
-
+                                              // 🔔 Listen to end signal from ESP
+                                              Future.delayed(const Duration(seconds: 20), () {
+                                                if (wateringNotifier.value == false && context.mounted) {
+                                                  Navigator.of(context, rootNavigator: true).pop();
+                                                  _wateringPlayer?.stop();
+                                                }
+                                              });
                                               setState(() => isWatering = false);
                                             },
                                     child: AnimatedSwitcher(
@@ -397,8 +412,8 @@ Color _getMoistureColor(int moisture) {
                               setState(() => isGlobalWatering = true);
 
                               // 🔊 Play watering sound
-                              final player = AudioPlayer();
-                              await player.play(AssetSource('sounds/watering.mp3'));
+                              _wateringPlayer = AudioPlayer();
+                              await _wateringPlayer!.play(AssetSource('sounds/watering.mp3'));
 
                               await context.read<SensorDataProvider>().triggerWatering();
 
@@ -422,11 +437,14 @@ Color _getMoistureColor(int moisture) {
                                   ),
                                 ),
                               );
-
-                              await Future.delayed(const Duration(seconds: 2));
-                              if (context.mounted) Navigator.of(context).pop();
-
-                              setState(() => isGlobalWatering = false);
+                            // 🔔 Listen to end signal from ESP
+                            Future.delayed(const Duration(seconds: 20), () {
+                              if (wateringNotifier.value == false && context.mounted) {
+                                Navigator.of(context, rootNavigator: true).pop();
+                                _wateringPlayer?.stop();
+                              }
+                            });                           // Reset watering state after completion                  
+                          setState(() => isGlobalWatering = false);
                             },
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),

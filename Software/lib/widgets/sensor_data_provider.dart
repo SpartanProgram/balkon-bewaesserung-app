@@ -17,6 +17,8 @@ class SensorDataProvider extends ChangeNotifier {
 
   final List<Map<String, dynamic>> _history = [];
   final MqttService mqtt = MqttService();
+  final ValueNotifier<bool> wateringEnded = ValueNotifier(false);
+
 
   bool _isConnected = false;
   bool get isConnected => _isConnected;
@@ -167,11 +169,21 @@ class SensorDataProvider extends ChangeNotifier {
           }
         }
       }
+      
+      if (data.containsKey("pump")) {
+        final pumpStates = List<bool>.from(data["pump"]);
+        final allOff = pumpStates.every((p) => p == false);
+
+        if (allOff) {
+          wateringEnded.value = true; // Notify listeners
+        }
+      }
 
       await _saveHistoryToPrefs();
       notifyListeners();
-    } catch (e) {
-      debugPrint("❌ Sensor JSON parse error: $e");
+    } 
+    catch (e) {
+    debugPrint("❌ Sensor JSON parse error: $e");
     }
   }
 
