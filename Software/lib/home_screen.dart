@@ -8,6 +8,7 @@ import 'widgets/water_level_droplet.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -19,41 +20,40 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final PageController _pageController = PageController();
-  AudioPlayer? _wateringPlayer;
+  final AudioPlayer _wateringPlayer = AudioPlayer();
   int _currentSensorIndex = 0;
 
-final Map<String, String> plantNameToAsset = {
-  'Basilikum': 'assets/plants/basilikum.png',
-  'Tomate': 'assets/plants/tomate.png',
-  'Paprika': 'assets/plants/paprika.png',
-  'Chili': 'assets/plants/chili.png',
-  'Salat': 'assets/plants/salat.png',
-  'Erdbeere': 'assets/plants/erdbeere.png',
-  'Minze': 'assets/plants/minze.png',
-  'Knoblauch': 'assets/plants/knoblauch.png',
-};
+  final Map<String, String> plantNameToAsset = {
+    'Basilikum': 'assets/plants/basilikum.png',
+    'Tomate': 'assets/plants/tomate.png',
+    'Paprika': 'assets/plants/paprika.png',
+    'Chili': 'assets/plants/chili.png',
+    'Salat': 'assets/plants/salat.png',
+    'Erdbeere': 'assets/plants/erdbeere.png',
+    'Minze': 'assets/plants/minze.png',
+    'Knoblauch': 'assets/plants/knoblauch.png',
+  };
 
   String _moistureEmoji(int value) {
-  if (value < 30) return "🥀";
-  if (value < 60) return "🌿";
-  return "💧";
-}
+    if (value < 30) return "🦀";
+    if (value < 60) return "🌿";
+    return "💧";
+  }
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
-@override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addObserver(this);
-
-  final provider = context.read<SensorDataProvider>();
-  provider.wateringEnded.addListener(() {
-    if (provider.wateringEnded.value) {
-      if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
-      _wateringPlayer?.stop();
-      provider.wateringEnded.value = false;
-    }
-  });
-}
+    final provider = context.read<SensorDataProvider>();
+    provider.wateringEnded.addListener(() {
+      if (provider.wateringEnded.value && mounted) {
+        if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
+        _wateringPlayer?.stop();
+        provider.wateringEnded.value = false;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -62,16 +62,66 @@ void initState() {
     super.dispose();
   }
 
-  
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final provider = context.read<SensorDataProvider>();
-      provider.reconnectIfNeeded();
+      context.read<SensorDataProvider>().reconnectIfNeeded();
     }
   }
 
+  void _showWateringDialog(String title, {required bool isGlobal}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final durationMs = prefs.getInt('watering_duration_ms') ?? 15000;
+
+    // Start sound at full volume
+    await _wateringPlayer.setVolume(1.0);
+    await _wateringPlayer.play(AssetSource('sounds/watering.mp3'));
+
+    // Show dialog with animation
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Lottie.asset(
+              isGlobal ? 'assets/animations/watering_all.json' : 'assets/animations/watering.json',
+              width: isGlobal ? 160 : 120,
+              repeat: true,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Start fade-out 1 second before stop
+    Future.delayed(Duration(milliseconds: durationMs - 1000), () async {
+      for (double v = 1.0; v >= 0.0; v -= 0.1) {
+        await _wateringPlayer.setVolume(v);
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    });
+
+    // Stop sound and close dialog
+    Future.delayed(Duration(milliseconds: durationMs + 200), () {
+      if (mounted) {
+        _wateringPlayer.stop();
+        if (Navigator.canPop(context)) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+      }
+    });
+  }
+  
 Widget _buildMoistureCard(int moisture) {
   double percent = (moisture.clamp(0, 100)) / 100;
 
@@ -137,6 +187,7 @@ Color _getMoistureColor(int moisture) {
   if (moisture < 60) return Colors.orange;
   return Colors.green;
 }
+
   Widget _animatedWateringCard(String lastWateredText) {
     return Container(
       width: double.infinity,
@@ -290,39 +341,11 @@ Color _getMoistureColor(int moisture) {
                                               setState(() => isWatering = true);
 
                                               // 🔊 Play watering sound
-                                              _wateringPlayer = AudioPlayer();
                                               await _wateringPlayer!.play(AssetSource('sounds/watering.mp3'));
 
                                               await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
-
+                                              _showWateringDialog("$sensorName wurde bewässert 💧", isGlobal: false);
                                               // Show dialog
-                                              showDialog(
-                                                context: context,
-                                                barrierDismissible: false,
-                                                builder: (_) => AlertDialog(
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                                  contentPadding: const EdgeInsets.all(24),
-                                                  content: Column(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      Lottie.asset('assets/animations/watering.json', width: 120, repeat: false),
-                                                      const SizedBox(height: 12),
-                                                      Text(
-                                                        "$sensorName wurde bewässert 💧",
-                                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                                        textAlign: TextAlign.center,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                              // 🔔 Listen to end signal from ESP
-                                              Future.delayed(const Duration(seconds: 20), () {
-                                                if (wateringNotifier.value == false && context.mounted) {
-                                                  Navigator.of(context, rootNavigator: true).pop();
-                                                  _wateringPlayer?.stop();
-                                                }
-                                              });
                                               setState(() => isWatering = false);
                                             },
                                     child: AnimatedSwitcher(
@@ -412,38 +435,10 @@ Color _getMoistureColor(int moisture) {
                               setState(() => isGlobalWatering = true);
 
                               // 🔊 Play watering sound
-                              _wateringPlayer = AudioPlayer();
                               await _wateringPlayer!.play(AssetSource('sounds/watering.mp3'));
 
-                              await context.read<SensorDataProvider>().triggerWatering();
-
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) => AlertDialog(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                  contentPadding: const EdgeInsets.all(24),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Lottie.asset('assets/animations/watering_all.json', width: 160, repeat: false),
-                                      const SizedBox(height: 12),
-                                      const Text(
-                                        "Alle Pflanzen wurden bewässert 💧",
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            // 🔔 Listen to end signal from ESP
-                            Future.delayed(const Duration(seconds: 20), () {
-                              if (wateringNotifier.value == false && context.mounted) {
-                                Navigator.of(context, rootNavigator: true).pop();
-                                _wateringPlayer?.stop();
-                              }
-                            });                           // Reset watering state after completion                  
+                          await context.read<SensorDataProvider>().triggerWatering();
+                          _showWateringDialog("Alle Pflanzen wurden bewässert 💧", isGlobal: true);
                           setState(() => isGlobalWatering = false);
                             },
                       child: AnimatedSwitcher(

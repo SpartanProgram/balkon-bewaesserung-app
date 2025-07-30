@@ -96,16 +96,21 @@ class SensorDataProvider extends ChangeNotifier {
       });
     }
     final prefs = await SharedPreferences.getInstance();
-  final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
 
-  if (notificationsEnabled && source == 'schedule') {
-    await NotificationService.show(
-      title: '🌱 Automatische Bewässerung',
-      body: 'Sensoren wurden gemäß Zeitplan bewässert',
-    );
-  }
+    if (notificationsEnabled && source == 'schedule') {
+      await NotificationService.show(
+        title: '🌱 Automatische Bewässerung',
+        body: 'Sensoren wurden gemäß Zeitplan bewässert',
+      );
+    }
 
-    mqtt.publish('pflanzen/pflanze01/control', jsonEncode({"pump": pumpStates}));
+    final wateringDuration = prefs.getInt('watering_duration_ms') ?? 15000;
+
+    mqtt.publish('pflanzen/pflanze01/control', jsonEncode({
+      "pump": pumpStates,
+      "duration": wateringDuration // ⬅️ send this too
+    }));
     await _saveHistoryToPrefs();
     notifyListeners();
   }
@@ -169,7 +174,7 @@ class SensorDataProvider extends ChangeNotifier {
           }
         }
       }
-      
+
       if (data.containsKey("pump")) {
         final pumpStates = List<bool>.from(data["pump"]);
         final allOff = pumpStates.every((p) => p == false);
