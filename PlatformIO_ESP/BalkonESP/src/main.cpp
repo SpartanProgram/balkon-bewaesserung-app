@@ -143,10 +143,18 @@ void loop() {
   }
   // Pump autoshutoff
   for (int i = 0; i < 3; i++) {
-  if (pumpActive[i] && millis() - pumpStartTimes[i] >= pumpDuration) {
+  if (pumpActive[i] && millis() - pumpStartTimes[i] >= customPumpDuration) {
     digitalWrite(pumpPins[i], LOW);
     pumpActive[i] = false;
     Serial.printf("Pump %d OFF (timer ended)\n", i + 1);
+
+    // 🚨 to notify Flutter that watering ended
+    StaticJsonDocument<100> endDoc;
+    JsonArray pumpStates = endDoc.createNestedArray("pump");
+    for (int j = 0; j < 3; j++) pumpStates.add(pumpActive[j]);
+    char buffer[128];
+    size_t len = serializeJson(endDoc, buffer);
+    client.publish(mqttPubTopic, buffer, len);
   }
 }
 
@@ -192,25 +200,36 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 
   // Safe pump control
-  if (doc.containsKey("pump") && doc["pump"].is<JsonArray>()) {
-    JsonArray pumpArray = doc["pump"].as<JsonArray>();
+if (doc.containsKey("pump") && doc["pump"].is<JsonArray>()) {
+  JsonArray pumpArray = doc["pump"].as<JsonArray>();
+  
+  unsigned long incomingDuration = customPumpDuration; // fallback default
+  if (doc.containsKey("duration")) {
+    unsigned long parsed = doc["duration"].as<unsigned long>();
+    if (parsed >= 5000 && parsed <= 60000) {
+      incomingDuration = parsed;
+      Serial.printf("✅ Custom watering duration received: %lu ms\n", incomingDuration);
+    } else {
+      Serial.println("⚠️ Invalid watering duration. Using default.");
+    }
+  }
 
-    for (int i = 0; i < 3; i++) {
-      bool state = false;
+  for (int i = 0; i < 3; i++) {
+    bool state = false;
 
-      if (i < pumpArray.size()) {
-        JsonVariant element = pumpArray[i];
-        if (element.is<bool>()) {
-          state = element.as<bool>();
-        } else {
-          Serial.printf("Pump %d: Invalid type\n", i + 1);
-        }
+    if (i < pumpArray.size()) {
+      JsonVariant element = pumpArray[i];
+      if (element.is<bool>()) {
+        state = element.as<bool>();
       } else {
-        Serial.printf("Pump %d: No value in array\n", i + 1);
+        Serial.printf("Pump %d: Invalid type\n", i + 1);
       }
+    } else {
+      Serial.printf("Pump %d: No value in array\n", i + 1);
+    }
 
-      digitalWrite(pumpPins[i], state ? HIGH : LOW);
-      pumpActive[i] = state;
+    digitalWrite(pumpPins[i], state ? HIGH : LOW);
+    pumpActive[i] = state;
 
       if (state) {
         pumpStartTimes[i] = millis();

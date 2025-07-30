@@ -17,6 +17,8 @@ class SensorDataProvider extends ChangeNotifier {
 
   final List<Map<String, dynamic>> _history = [];
   final MqttService mqtt = MqttService();
+  final ValueNotifier<bool> wateringEnded = ValueNotifier(false);
+
 
   bool _isConnected = false;
   bool get isConnected => _isConnected;
@@ -94,16 +96,21 @@ class SensorDataProvider extends ChangeNotifier {
       });
     }
     final prefs = await SharedPreferences.getInstance();
-  final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
 
-  if (notificationsEnabled && source == 'schedule') {
-    await NotificationService.show(
-      title: '🌱 Automatische Bewässerung',
-      body: 'Sensoren wurden gemäß Zeitplan bewässert',
-    );
-  }
+    if (notificationsEnabled && source == 'schedule') {
+      await NotificationService.show(
+        title: '🌱 Automatische Bewässerung',
+        body: 'Sensoren wurden gemäß Zeitplan bewässert',
+      );
+    }
 
-    mqtt.publish('pflanzen/pflanze01/control', jsonEncode({"pump": pumpStates}));
+    final wateringDuration = prefs.getInt('watering_duration_ms') ?? 15000;
+
+    mqtt.publish('pflanzen/pflanze01/control', jsonEncode({
+      "pump": pumpStates,
+      "duration": wateringDuration // ⬅️ send this too
+    }));
     await _saveHistoryToPrefs();
     notifyListeners();
   }
@@ -168,10 +175,20 @@ class SensorDataProvider extends ChangeNotifier {
         }
       }
 
+      if (data.containsKey("pump")) {
+        final pumpStates = List<bool>.from(data["pump"]);
+        final allOff = pumpStates.every((p) => p == false);
+
+        if (allOff) {
+          wateringEnded.value = true; // Notify listeners
+        }
+      }
+
       await _saveHistoryToPrefs();
       notifyListeners();
-    } catch (e) {
-      debugPrint("❌ Sensor JSON parse error: $e");
+    } 
+    catch (e) {
+    debugPrint("❌ Sensor JSON parse error: $e");
     }
   }
 
