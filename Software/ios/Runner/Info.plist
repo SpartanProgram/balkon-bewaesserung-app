@@ -49,9 +49,13 @@
 	<!-- ✅ Background fetch and remote notifications -->
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>fetch</string>
-		<string>remote-notification</string>
+	<string>fetch</string>
+	<string>remote-notification</string>
 	</array>
+
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
+
 
 	<!-- ✅ Notifications permission prompt -->
 	<key>NSUserNotificationUsageDescription</key>

@@ -19,6 +19,8 @@ class NotificationService {
     );
 
     await _plugin.initialize(settings);
+    print("🔧 Local notifications initialized");
+
   }
 
   static Future<void> show({
@@ -28,12 +30,19 @@ class NotificationService {
     const androidDetails = AndroidNotificationDetails(
       'watering_channel',
       'Bewässerung Benachrichtigungen',
+      channelDescription: 'Benachrichtigungen für Pflanzenbewässerung',
       importance: Importance.max,
       priority: Priority.high,
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    const iosDetails = DarwinNotificationDetails();
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
 
     await _plugin.show(0, title, body, details);
+    print("🔔 Local notification shown: $title - $body");
   }
 }

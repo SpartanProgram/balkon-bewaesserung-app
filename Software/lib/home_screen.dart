@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'widgets/custom_scaffold.dart';
 import 'widgets/sensor_data_provider.dart';
 import '../services/sensor_name_service.dart';
-import 'widgets/water_level_droplet.dart';
 import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -21,6 +20,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   final AudioPlayer _wateringPlayer = AudioPlayer();
+  final AudioPlayer _warningPlayer = AudioPlayer();
+  bool _hasPlayedWarning = false; // Prevent repeated alerts
   int _currentSensorIndex = 0;
 
   final Map<String, String> plantNameToAsset = {
@@ -34,11 +35,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     'Knoblauch': 'assets/plants/knoblauch.png',
   };
 
+  
+
   String _moistureEmoji(int value) {
     if (value < 30) return "🦀";
     if (value < 60) return "🌿";
     return "💧";
   }
+
 
   @override
   void initState() {
@@ -46,12 +50,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     final provider = context.read<SensorDataProvider>();
+
+    // ✅ Listen to watering end to close dialog
     provider.wateringEnded.addListener(() {
       if (provider.wateringEnded.value && mounted) {
         if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
         provider.wateringEnded.value = false;
       }
     });
+
   }
 
   @override
@@ -120,8 +127,63 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
     });
   }
+
+Widget buildWaterLevelStatus(String value) {
+  int level = int.tryParse(value.replaceAll('%', '')) ?? 0;
+
+  late IconData icon;
+  late Color color;
+  late String label;
+
+  if (level >= 60) {
+    icon = Icons.check_circle;
+    color = Colors.green;
+    label = 'Wasserstand: Gut';
+    _hasPlayedWarning = false;
+  } else if (level >= 30) {
+    icon = Icons.warning_amber_rounded;
+    color = Colors.orange;
+    label = 'Wasserstand: Niedrig';
+    _hasPlayedWarning = false;
+  } else {
+    icon = Icons.error_outline;
+    color = Colors.red;
+    label = 'Wasserstand: Kritisch';
+
+    if (!_hasPlayedWarning) {
+      _hasPlayedWarning = true;
+      _warningPlayer.play(AssetSource('sounds/warning.mp3'));
+    }
+  }
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: color),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: color),
+        const SizedBox(width: 10),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
   
 Widget _buildMoistureCard(int moisture) {
+  
   double percent = (moisture.clamp(0, 100)) / 100;
 
   return Column(
@@ -326,7 +388,7 @@ Color _getMoistureColor(int moisture) {
                                 builder: (context, setState) {
                                   return ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: isWatering ? Colors.grey : Colors.green[700],
+                                      backgroundColor: isWatering ? Colors.grey : const Color.fromARGB(255, 207, 207, 207),
                                       padding: const EdgeInsets.symmetric(vertical: 16),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                     ),
@@ -394,22 +456,12 @@ Color _getMoistureColor(int moisture) {
                     },
                   );
                 },
-              ),
+              ),             
             ),
-                        const SizedBox(height: 16),
-            if (sensorData.isNotEmpty) ...[
-              const Text(
-                "Wasserstand",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              WaterLevelDroplet(
-                waterPercent: int.tryParse(
-                      sensorData[_currentSensorIndex]["waterLevel"]!.replaceAll('%', '')
-                    ) ?? 0,
-              ),
-            ],
-            const SizedBox(height: 16),
+           const SizedBox(height: 16),
+           if (sensorData.isNotEmpty)
+            buildWaterLevelStatus(sensorData[_currentSensorIndex]["waterLevel"] ?? '0'),
+           const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: StatefulBuilder(
