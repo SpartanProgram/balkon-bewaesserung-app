@@ -401,22 +401,26 @@ Color _getMoistureColor(int moisture) {
                               _buildMoistureCard(moisture),
                               const SizedBox(height: 12),
                               _animatedWateringCard(sensor["lastWatered"]!),
-                            Builder(
-                              builder: (_) {
-                                final raw = sensor["history"];
-                                final history = (raw != null)
-                                    ? (jsonDecode(raw) as List)
-                                        .map((e) => int.tryParse(e.toString().replaceAll('%', '')) ?? 0)
-                                        .toList()
-                                    : <int>[];
-                                return Column(
-                                  children: [
-                                    MoistureChart(data: history),
-                                    const SizedBox(height: 12),
-                                  ],
-                                );
-                              },
-                            ),
+Builder(
+  builder: (_) {
+    final raw = sensor["history"];
+    final history = (raw != null)
+        ? (jsonDecode(raw) as List)
+            .map((e) => int.tryParse(e.toString().replaceAll('%', '')) ?? 0)
+            .toList()
+        : <int>[];
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: MoistureChart(data: history),
+        ),
+        const SizedBox(height: 24), // 👈 EXTRA SPACE between chart and button
+      ],
+    );
+  },
+),
                               StatefulBuilder(
                                 builder: (context, setState) {
                                   return ElevatedButton(
