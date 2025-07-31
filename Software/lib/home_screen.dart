@@ -404,20 +404,21 @@ Color _getMoistureColor(int moisture) {
 Builder(
   builder: (_) {
     final raw = sensor["history"];
-    final history = (raw != null)
-        ? (jsonDecode(raw) as List)
-            .map((e) => int.tryParse(e.toString().replaceAll('%', '')) ?? 0)
-            .toList()
-        : <int>[];
+    final now = DateTime.now();
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: MoistureChart(data: history),
-        ),
-        const SizedBox(height: 24), // 👈 EXTRA SPACE between chart and button
-      ],
+    final List<Map<String, dynamic>> history = (raw != null)
+        ? (jsonDecode(raw) as List)
+            .map((entry) => Map<String, dynamic>.from(entry))
+            .where((entry) {
+              final timestamp = DateTime.tryParse(entry["timestamp"] ?? "");
+              return timestamp != null && now.difference(timestamp).inHours < 24;
+            })
+            .toList()
+        : [];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 32),
+      child: MoistureChart(rawData: history),
     );
   },
 ),

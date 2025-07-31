@@ -130,17 +130,33 @@ class SensorDataProvider extends ChangeNotifier {
         if (data.containsKey(key)) {
           final rawValue = data[key];
           final moisture = rawValue is int ? rawValue : int.tryParse(rawValue.toString()) ?? 0;
-          final moistureStr = "$moisture%";
+          final moistureStr = "$moisture%"; // ✅ Fix: define moistureStr
+          final now = DateTime.now();
+
           _sensorData[i]["moisture"] = moistureStr;
 
-          // Update history
-          List<dynamic> rawHistory = [];
+          final rawHistory = _sensorData[i]["history"];
+          List<Map<String, dynamic>> history = [];
+
           try {
-            rawHistory = jsonDecode(_sensorData[i]["history"] ?? '[]') as List;
+            history = List<Map<String, dynamic>>.from(
+              (jsonDecode(rawHistory ?? '[]') as List)
+                  .map((e) => Map<String, dynamic>.from(e)),
+            );
           } catch (_) {}
-          rawHistory.add(moisture);
-          if (rawHistory.length > 30) rawHistory.removeAt(0);
-          _sensorData[i]["history"] = jsonEncode(rawHistory);
+
+          history.add({
+            "timestamp": now.toIso8601String(),
+            "value": moisture,
+          });
+
+          // ✅ Keep only last 24 hours
+          history = history.where((entry) {
+            final ts = DateTime.tryParse(entry["timestamp"] ?? "");
+            return ts != null && now.difference(ts).inHours < 24;
+          }).toList();
+
+          _sensorData[i]["history"] = jsonEncode(history);
         }
       }
 
