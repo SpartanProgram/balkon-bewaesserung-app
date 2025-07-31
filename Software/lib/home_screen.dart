@@ -138,11 +138,11 @@ Widget _buildWaterLevelStatus(String value) {
   late String label;
   bool shouldAnimate = false;
 
-  if (level >= 60) {
+  if (level > 60) {
     icon = Icons.check_circle;
     color = Colors.green;
     label = 'Wasserstand: Gut';
-  } else if (level >= 30) {
+  } else if (level > 20) {
     icon = Icons.warning_amber_rounded;
     color = Colors.orange;
     label = 'Wasserstand: Niedrig';
@@ -401,27 +401,27 @@ Color _getMoistureColor(int moisture) {
                               _buildMoistureCard(moisture),
                               const SizedBox(height: 12),
                               _animatedWateringCard(sensor["lastWatered"]!),
-Builder(
-  builder: (_) {
-    final raw = sensor["history"];
-    final now = DateTime.now();
+                              Builder(
+                                builder: (_) {
+                                  final raw = sensor["history"];
+                                  final now = DateTime.now();
 
-    final List<Map<String, dynamic>> history = (raw != null)
-        ? (jsonDecode(raw) as List)
-            .map((entry) => Map<String, dynamic>.from(entry))
-            .where((entry) {
-              final timestamp = DateTime.tryParse(entry["timestamp"] ?? "");
-              return timestamp != null && now.difference(timestamp).inHours < 24;
-            })
-            .toList()
-        : [];
+                                  final List<Map<String, dynamic>> history = (raw != null)
+                                      ? (jsonDecode(raw) as List)
+                                          .map((entry) => Map<String, dynamic>.from(entry))
+                                          .where((entry) {
+                                            final timestamp = DateTime.tryParse(entry["timestamp"] ?? "");
+                                            return timestamp != null && now.difference(timestamp).inHours < 24;
+                                          })
+                                          .toList()
+                                      : [];
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 32),
-      child: MoistureChart(rawData: history),
-    );
-  },
-),
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 20, bottom: 32),
+                                    child: MoistureChart(rawData: history),
+                                  );
+                                },
+                              ),
                               StatefulBuilder(
                                 builder: (context, setState) {
                                   return ElevatedButton(

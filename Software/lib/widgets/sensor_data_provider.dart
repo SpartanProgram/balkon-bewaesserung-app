@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_service.dart';
 import '../services/notification_service.dart';
+import '../services/sensor_name_service.dart';
+
 
 
 
@@ -19,6 +21,8 @@ class SensorDataProvider extends ChangeNotifier {
   final List<Map<String, dynamic>> _history = [];
   final MqttService mqtt = MqttService();
   final ValueNotifier<bool> wateringEnded = ValueNotifier(false);
+  final List<int> _lastAlertLevel = List.filled(3, 101); // 101 = above 100%, so no alert sent yet
+
 
   int? _previousWaterLevel;
   bool _isConnected = false;
@@ -124,16 +128,59 @@ class SensorDataProvider extends ChangeNotifier {
     try {
       final data = Map<String, dynamic>.from(json.decode(jsonString));
 
+      final now = DateTime.now(); // ✅ Shared timestamp for all entries
+
       // Update moisture for sensor1 to sensor3
       for (int i = 0; i < 3; i++) {
         String key = "sensor${i + 1}";
         if (data.containsKey(key)) {
           final rawValue = data[key];
           final moisture = rawValue is int ? rawValue : int.tryParse(rawValue.toString()) ?? 0;
-          final moistureStr = "$moisture%"; // ✅ Fix: define moistureStr
-          final now = DateTime.now();
+          final moistureStr = "$moisture%";
 
           _sensorData[i]["moisture"] = moistureStr;
+
+          // 🔔 Notify if moisture drops below critical thresholds (20%, 10%, 0%) — no repeat
+          final thresholds = [20, 10, 0];
+          for (final threshold in thresholds) {
+            if (moisture <= threshold && _lastAlertLevel[i] > threshold) {
+              final prefs = await SharedPreferences.getInstance();
+              final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+              final name = await SensorNameService.getName(i, fallback: 'Sensor');
+
+              String levelLabel;
+              if (threshold == 0) {
+                levelLabel = "💀 Pflanze komplett ausgetrocknet!";
+              } else if (threshold == 10) {
+                levelLabel = "🥀 Sehr niedrige Feuchtigkeit!";
+              } else {
+                levelLabel = "⚠️ Niedrige Feuchtigkeit!";
+              }
+
+              _history.add({
+                'timestamp': now,
+                'type': 'alert',
+                'sensorId': i,
+                'event': '$name hat nur noch $moisture% Feuchtigkeit',
+              });
+
+              if (notificationsEnabled) {
+                await NotificationService.show(
+                  title: levelLabel,
+                  body: '$name: $moisture% Feuchtigkeit',
+                  playWarningSound: true,
+                );
+              }
+
+              _lastAlertLevel[i] = threshold;
+              break; // prevent sending multiple alerts at once
+            }
+          }
+
+          // Reset alert level if moisture rises above 20%
+          if (moisture > 20 && _lastAlertLevel[i] <= 20) {
+            _lastAlertLevel[i] = 101;
+          }
 
           final rawHistory = _sensorData[i]["history"];
           List<Map<String, dynamic>> history = [];
@@ -145,12 +192,52 @@ class SensorDataProvider extends ChangeNotifier {
             );
           } catch (_) {}
 
-          history.add({
-            "timestamp": now.toIso8601String(),
-            "value": moisture,
-          });
+          // 🟡 Check for sudden drop (>= 40%) within 1 hour
+          if (history.isNotEmpty) {
+            final lastEntry = history.last;
+            final lastMoisture = lastEntry["value"];
+            final lastTime = DateTime.tryParse(lastEntry["timestamp"] ?? "");
 
-          // ✅ Keep only last 24 hours
+            if (lastMoisture is int && lastTime != null) {
+              final minutesAgo = now.difference(lastTime).inMinutes;
+              final drop = lastMoisture - moisture;
+
+              if (minutesAgo <= 60 && drop >= 40) {
+                _history.add({
+                  'timestamp': now,
+                  'type': 'alert',
+                  'sensorId': i,
+                  'event': 'Feuchtigkeit stark gefallen: -$drop%',
+                });
+
+                final prefs = await SharedPreferences.getInstance();
+                final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+
+                if (notificationsEnabled) {
+                final name = await SensorNameService.getName(i, fallback: 'Sensor');
+                await NotificationService.show(
+                  title: '⚠️ Plötzlicher Feuchtigkeitsabfall',
+                  body: '$name: -$drop% in letzter Stunde',
+                  playWarningSound: true,
+                );
+                }
+              }
+            }
+          }
+
+          // ⏱ Only record if at least 1 minute has passed
+          final lastEntryTime = history.isNotEmpty
+              ? DateTime.tryParse(history.last["timestamp"] ?? "")
+              : null;
+
+          if (lastEntryTime == null || now.difference(lastEntryTime).inMinutes >= 1) {
+            history.add({
+              "timestamp": now.toIso8601String(),
+              "value": moisture,
+            });
+          }
+
+          // 🧹 Keep only last 24h
           history = history.where((entry) {
             final ts = DateTime.tryParse(entry["timestamp"] ?? "");
             return ts != null && now.difference(ts).inHours < 24;
@@ -169,9 +256,9 @@ class SensorDataProvider extends ChangeNotifier {
           _sensorData[i]["waterLevel"] = waterLevelStr;
         }
 
-      if (_hasInitializedWaterLevel && _previousWaterLevel != null && _previousWaterLevel! > 20 && waterLevel <= 20) {
+        if (_hasInitializedWaterLevel && _previousWaterLevel != null && _previousWaterLevel! > 20 && waterLevel <= 20) {
           _history.add({
-            'timestamp': DateTime.now(),
+            'timestamp': now,
             'type': 'sensor',
             'sensorId': -1,
             'event': 'Wasserstand niedrig: $waterLevel%',
