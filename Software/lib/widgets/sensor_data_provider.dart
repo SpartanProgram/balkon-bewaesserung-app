@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/mqtt_service.dart';
 import '../services/notification_service.dart';
 import '../services/sensor_name_service.dart';
+import 'package:bewaesserung_mobile_app/main.dart'; // or wherever your navigatorKey is defined
 
 
 
@@ -171,6 +172,25 @@ class SensorDataProvider extends ChangeNotifier {
                   playWarningSound: true,
                 );
               }
+              
+                // 🟢 Also show in-app alert if app is open
+                final context = navigatorKey.currentContext;
+                if (context != null) {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text(levelLabel),
+                      content: Text('$name hat nur noch $moisture% Feuchtigkeit.'),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
               _lastAlertLevel[i] = threshold;
               break; // prevent sending multiple alerts at once
@@ -218,8 +238,8 @@ class SensorDataProvider extends ChangeNotifier {
                 await NotificationService.show(
                   title: '⚠️ Plötzlicher Feuchtigkeitsabfall',
                   body: '$name: -$drop% in letzter Stunde',
-                  playWarningSound: true,
-                );
+                  playWarningSound: true,                  
+                  );
                 }
               }
             }

@@ -4,7 +4,7 @@ import 'home_screen.dart';
 import 'widgets/sensor_data_provider.dart';
 
 
-
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
     return Consumer<SensorDataProvider>(
       builder: (context, provider, _) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'Balkon Bewässerung',
           themeMode: provider.themeMode,
           theme: ThemeData(
