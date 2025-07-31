@@ -8,6 +8,10 @@ import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'widgets/moisture_chart.dart';
+import 'dart:convert';
+
+
 
 
 class HomeScreen extends StatefulWidget {
@@ -20,8 +24,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   final AudioPlayer _wateringPlayer = AudioPlayer();
-  final AudioPlayer _warningPlayer = AudioPlayer();
-  bool _hasPlayedWarning = false; // Prevent repeated alerts
   int _currentSensorIndex = 0;
 
   final Map<String, String> plantNameToAsset = {
@@ -128,35 +130,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
   }
 
-Widget buildWaterLevelStatus(String value) {
+Widget _buildWaterLevelStatus(String value) {
   int level = int.tryParse(value.replaceAll('%', '')) ?? 0;
 
   late IconData icon;
   late Color color;
   late String label;
+  bool shouldAnimate = false;
 
   if (level >= 60) {
     icon = Icons.check_circle;
     color = Colors.green;
     label = 'Wasserstand: Gut';
-    _hasPlayedWarning = false;
   } else if (level >= 30) {
     icon = Icons.warning_amber_rounded;
     color = Colors.orange;
     label = 'Wasserstand: Niedrig';
-    _hasPlayedWarning = false;
+    shouldAnimate = true;
   } else {
     icon = Icons.error_outline;
     color = Colors.red;
     label = 'Wasserstand: Kritisch';
-
-    if (!_hasPlayedWarning) {
-      _hasPlayedWarning = true;
-      _warningPlayer.play(AssetSource('sounds/warning.mp3'));
-    }
+    shouldAnimate = true;
   }
 
-  return Container(
+  Widget card = Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     decoration: BoxDecoration(
       color: color.withOpacity(0.1),
@@ -179,6 +177,26 @@ Widget buildWaterLevelStatus(String value) {
       ],
     ),
   );
+
+  if (shouldAnimate) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 1.0, end: 1.05),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
+      builder: (context, scale, child) {
+        return Transform.scale(
+          scale: scale,
+          child: child,
+        );
+      },
+      onEnd: () {
+        if (mounted) setState(() {}); // Loop animation
+      },
+      child: card,
+    );
+  } else {
+    return card;
+  }
 }
 
   
@@ -383,7 +401,22 @@ Color _getMoistureColor(int moisture) {
                               _buildMoistureCard(moisture),
                               const SizedBox(height: 12),
                               _animatedWateringCard(sensor["lastWatered"]!),
-                              const SizedBox(height: 12),                            
+                            Builder(
+                              builder: (_) {
+                                final raw = sensor["history"];
+                                final history = (raw != null)
+                                    ? (jsonDecode(raw) as List)
+                                        .map((e) => int.tryParse(e.toString().replaceAll('%', '')) ?? 0)
+                                        .toList()
+                                    : <int>[];
+                                return Column(
+                                  children: [
+                                    MoistureChart(data: history),
+                                    const SizedBox(height: 12),
+                                  ],
+                                );
+                              },
+                            ),
                               StatefulBuilder(
                                 builder: (context, setState) {
                                   return ElevatedButton(
@@ -460,7 +493,7 @@ Color _getMoistureColor(int moisture) {
             ),
            const SizedBox(height: 16),
            if (sensorData.isNotEmpty)
-            buildWaterLevelStatus(sensorData[_currentSensorIndex]["waterLevel"] ?? '0'),
+            _buildWaterLevelStatus(sensorData[_currentSensorIndex]["waterLevel"] ?? '0'),
            const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,

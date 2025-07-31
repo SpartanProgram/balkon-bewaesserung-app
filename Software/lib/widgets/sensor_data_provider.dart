@@ -13,15 +13,18 @@ class SensorDataProvider extends ChangeNotifier {
         "moisture": "--",
         "waterLevel": "--",
         "lastWatered": "--",
+        "history": jsonEncode([]),
       });
 
   final List<Map<String, dynamic>> _history = [];
   final MqttService mqtt = MqttService();
   final ValueNotifier<bool> wateringEnded = ValueNotifier(false);
 
-
+  int? _previousWaterLevel;
   bool _isConnected = false;
   bool get isConnected => _isConnected;
+  bool _hasInitializedWaterLevel = false;
+
 
   bool _scheduleActivated = false;
   TimeOfDay _scheduledTime = const TimeOfDay(hour: 8, minute: 0);
@@ -121,34 +124,27 @@ class SensorDataProvider extends ChangeNotifier {
     try {
       final data = Map<String, dynamic>.from(json.decode(jsonString));
 
+      // Update moisture for sensor1 to sensor3
       for (int i = 0; i < 3; i++) {
-        final key = "sensor${i + 1}";
+        String key = "sensor${i + 1}";
         if (data.containsKey(key)) {
-          final moisture = data[key];
-          if (moisture is int || moisture is double) {
-            _sensorData[i]["moisture"] = "$moisture%";
+          final rawValue = data[key];
+          final moisture = rawValue is int ? rawValue : int.tryParse(rawValue.toString()) ?? 0;
+          final moistureStr = "$moisture%";
+          _sensorData[i]["moisture"] = moistureStr;
 
-            if (moisture <= 20) {
-              _history.add({
-                'timestamp': DateTime.now(),
-                'type': 'sensor',
-                'sensorId': i,
-                'event': 'Sensor ${i + 1}: $moisture% Feuchtigkeit',
-              });
-              final prefs = await SharedPreferences.getInstance();
-              final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
-
-              if (notificationsEnabled) {
-                await NotificationService.show(
-                  title: '🌱 Niedrige Bodenfeuchtigkeit',
-                  body: 'Sensor ${i + 1}: nur $moisture%',
-                );
-              }
-            }
-          }
+          // Update history
+          List<dynamic> rawHistory = [];
+          try {
+            rawHistory = jsonDecode(_sensorData[i]["history"] ?? '[]') as List;
+          } catch (_) {}
+          rawHistory.add(moisture);
+          if (rawHistory.length > 30) rawHistory.removeAt(0);
+          _sensorData[i]["history"] = jsonEncode(rawHistory);
         }
       }
 
+      // Water level (sensor4)
       if (data.containsKey("sensor4")) {
         final waterLevel = data["sensor4"];
         final waterLevelStr = "$waterLevel%";
@@ -157,38 +153,44 @@ class SensorDataProvider extends ChangeNotifier {
           _sensorData[i]["waterLevel"] = waterLevelStr;
         }
 
-        if (waterLevel <= 20) {
+      if (_hasInitializedWaterLevel && _previousWaterLevel != null && _previousWaterLevel! > 20 && waterLevel <= 20) {
           _history.add({
             'timestamp': DateTime.now(),
             'type': 'sensor',
             'sensorId': -1,
             'event': 'Wasserstand niedrig: $waterLevel%',
           });
+
           final prefs = await SharedPreferences.getInstance();
           final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
 
           if (notificationsEnabled) {
             await NotificationService.show(
               title: '💧 Niedriger Wasserstand',
-              body: 'Wasserstand: $waterLevel%',);
+              body: 'Wasserstand: $waterLevel%',
+              playWarningSound: true,
+            );
           }
         }
+
+        _previousWaterLevel = waterLevel;
+        _hasInitializedWaterLevel = true;
       }
 
+      // Check if all pumps are off
       if (data.containsKey("pump")) {
         final pumpStates = List<bool>.from(data["pump"]);
         final allOff = pumpStates.every((p) => p == false);
 
         if (allOff) {
-          wateringEnded.value = true; // Notify listeners
+          wateringEnded.value = true;
         }
       }
 
       await _saveHistoryToPrefs();
       notifyListeners();
-    } 
-    catch (e) {
-    debugPrint("❌ Sensor JSON parse error: $e");
+    } catch (e) {
+      debugPrint("❌ Sensor JSON parse error: $e");
     }
   }
 
