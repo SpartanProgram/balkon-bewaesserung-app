@@ -430,12 +430,8 @@ Color _getMoistureColor(int moisture) {
                                       padding: const EdgeInsets.symmetric(vertical: 16),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                     ),
-                                      onPressed: isWatering
-                                          ? null
-                                          : () async {
+                                      onPressed: () async {
                                               HapticFeedback.mediumImpact();
-                                              setState(() => isWatering = true);
-
                                               // 🔊 Play watering sound
                                               await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
                                               _showWateringDialog("$sensorName wird gerade bewässert 💧", isGlobal: false);
