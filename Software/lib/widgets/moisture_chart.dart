@@ -30,32 +30,55 @@ class MoistureChart extends StatelessWidget {
       height: 200,
       child: LineChart(
         LineChartData(
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              barWidth: 3,
-              color: Colors.green,
-              dotData: FlDotData(show: false),
-            ),
-          ],
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: true, reservedSize: 40),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: (spots.length / 4).clamp(1, 5).toDouble(),
-                getTitlesWidget: (value, meta) {
-                  final label = timeLabels[value];
-                  return Text(label ?? '', style: const TextStyle(fontSize: 10));
-                },
+          minY: 0,
+          maxY: 100,
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: false,
+                color: Theme.of(context).colorScheme.primary,
+                barWidth: 3,
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                ),
+                dotData: FlDotData(show: false),
               ),
-            ),
+            ],          
+            titlesData: FlTitlesData(
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  interval: (spots.length / 4).clamp(1, 5).toDouble(),
+                  getTitlesWidget: (value, meta) {
+                    final label = timeLabels[value];
+                    return Text(label ?? '', style: const TextStyle(fontSize: 10));
+                  },
+                ),
+              ),
+              topTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+            ),          
+          gridData: FlGridData(show: true,drawVerticalLine: false, // remove vertical grid lines
+          horizontalInterval: 10, // smaller steps
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: Colors.grey.shade300,
+            strokeWidth: 1,
           ),
-          gridData: FlGridData(show: true),
-          borderData: FlBorderData(show: true),
+        ),
+          borderData: FlBorderData(show: true, 
+          border: Border(
+            left: BorderSide(color: Colors.grey.shade400),
+            bottom: BorderSide(color: Colors.grey.shade400),
+          ),
+        ),
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
               tooltipBgColor: Colors.black87,
