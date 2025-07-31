@@ -347,7 +347,7 @@ Color _getMoistureColor(int moisture) {
             ),
             const SizedBox(height: 20),
             SizedBox(
-              height: 520,
+              height: 670,
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: sensorData.length,
@@ -366,7 +366,7 @@ Color _getMoistureColor(int moisture) {
                       final moisture = int.tryParse(sensor["moisture"]!.replaceAll('%', '')) ?? 0;
                       return KeyedSubtree(
                         key: ValueKey(sensorName), // Force full widget rebuild if name changes
-                        child: SingleChildScrollView(
+                        child: Padding(
                           padding: const EdgeInsets.only(bottom: 24),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -470,23 +470,6 @@ Color _getMoistureColor(int moisture) {
                                 },
                               ),
                               const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(sensorData.length, (dotIndex) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  child: Icon(
-                                    _currentSensorIndex == dotIndex
-                                        ? Icons.circle
-                                        : Icons.circle_outlined,
-                                    size: 10,
-                                    color: _currentSensorIndex == dotIndex
-                                        ? (isDark ? Colors.white : Colors.black)
-                                        : (isDark ? Colors.white54 : Colors.grey),
-                                  ),
-                                );
-                              }),
-                            ),
                           ],
                         ),
                         ),
@@ -494,8 +477,25 @@ Color _getMoistureColor(int moisture) {
                     },
                   );
                 },
-              ),             
+              ),                         
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(sensorData.length, (dotIndex) {
+              return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Icon(
+               _currentSensorIndex == dotIndex
+                  ? Icons.circle
+                  : Icons.circle_outlined,
+                    size: 10,
+                    color: _currentSensorIndex == dotIndex
+                          ? (isDark ? Colors.white : Colors.black)
+                          : (isDark ? Colors.white54 : Colors.grey),
+                     ),
+                    );
+                  }),
+                ),
            const SizedBox(height: 16),
            if (sensorData.isNotEmpty)
             _buildWaterLevelStatus(sensorData[_currentSensorIndex]["waterLevel"] ?? '0'),
