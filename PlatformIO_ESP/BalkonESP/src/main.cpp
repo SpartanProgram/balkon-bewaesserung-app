@@ -61,7 +61,7 @@ unsigned long lastPublishTime = 0;
 const unsigned long calibrationPeriod = 20000;
 
 // Pump control timing
-const unsigned long pumpDuration = 5000;  // n000 Sec
+unsigned long customPumpDuration = 15000; // default: 15s
 unsigned long pumpStartTimes[3] = {0, 0, 0};  // Track when each pump was turned on
 bool pumpActive[3] = {false, false, false};  // Track pump state
 
@@ -143,7 +143,7 @@ void loop() {
   }
   // Pump autoshutoff
   for (int i = 0; i < 3; i++) {
-  if (pumpActive[i] && millis() - pumpStartTimes[i] >= pumpDuration) {
+  if (pumpActive[i] && millis() - pumpStartTimes[i] >= customPumpDuration) {
     digitalWrite(pumpPins[i], LOW);
     pumpActive[i] = false;
     Serial.printf("Pump %d OFF (timer ended)\n", i + 1);
@@ -193,32 +193,48 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   // Safe pump control
   if (doc.containsKey("pump") && doc["pump"].is<JsonArray>()) {
-    JsonArray pumpArray = doc["pump"].as<JsonArray>();
-
-    for (int i = 0; i < 3; i++) {
-      bool state = false;
-
-      if (i < pumpArray.size()) {
-        JsonVariant element = pumpArray[i];
-        if (element.is<bool>()) {
-          state = element.as<bool>();
-        } else {
-          Serial.printf("Pump %d: Invalid type\n", i + 1);
-        }
-      } else {
-        Serial.printf("Pump %d: No value in array\n", i + 1);
-      }
-
-      digitalWrite(pumpPins[i], state ? HIGH : LOW);
-      pumpActive[i] = state;
-
-      if (state) {
-        pumpStartTimes[i] = millis();
-        Serial.printf("Pump %d ON (auto-off in 5s)\n", i + 1);
-      } else {
-        Serial.printf("Pump %d OFF (manual/default)\n", i + 1);
-      }
+  JsonArray pumpArray = doc["pump"].as<JsonArray>();
+  
+  unsigned long incomingDuration = customPumpDuration; // fallback default
+  if (doc.containsKey("duration")) {
+    unsigned long parsed = doc["duration"].as<unsigned long>();
+    if (parsed >= 5000 && parsed <= 60000) {
+      incomingDuration = parsed;
+      Serial.printf("✅ Custom watering duration received: %lu ms\n", incomingDuration);
+    } else {
+      Serial.println("⚠️ Invalid watering duration. Using default.");
     }
+  }
+
+  for (int i = 0; i < 3; i++) {
+    bool state = false;
+
+    if (i < pumpArray.size()) {
+      JsonVariant element = pumpArray[i];
+      if (element.is<bool>()) {
+        state = element.as<bool>();
+      } else {
+        Serial.printf("Pump %d: Invalid type\n", i + 1);
+      }
+    } else {
+      Serial.printf("Pump %d: No value in array\n", i + 1);
+    }
+
+    digitalWrite(pumpPins[i], state ? HIGH : LOW);
+    pumpActive[i] = state;
+
+    if (state) {
+      pumpStartTimes[i] = millis();
+      // Store per-pump duration as needed (or keep global if shared)
+      Serial.printf("🚿 Pump %d ON for %lu ms\n", i + 1, incomingDuration);
+    } else {
+      Serial.printf("⛔ Pump %d OFF\n", i + 1);
+    }
+  }
+
+  // Finally, store the incoming duration globally if desired
+  customPumpDuration = incomingDuration;
+
   } else {
     Serial.println("Invalid or missing 'pump' array in MQTT message.");
   }
