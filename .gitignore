@@ -1,0 +1,72 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# Build outputs & binaries
+*.apk
+*.ipa
+*.dmg
+*.zip
+*.tar.gz
+*.log
+*.tmp
+*.bak
+
+# Flutter & Dart
+.dart_tool/
+.packages
+.flutter-*
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+.buildlog/
+.melos_tool/
+.metadata
+
+# Build folders
+build/
+**/build/
+Software/build/
+
+# iOS & macOS
+ios/Flutter/
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Flutter/Generated.xcconfig
+ios/Flutter.podspec
+
+macos/Flutter/
+macos/Pods/
+macos/.symlinks/
+macos/Runner.xcworkspace/
+macos/Runner.xcodeproj/xcuserdata/
+macos/Runner.xcodeproj/project.xcworkspace/
+macos/Runner.xcworkspace/xcuserdata/
+
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/
+
+# Android
+android/.gradle/
+android/.idea/
+android/.settings/
+android/local.properties
+android/key.properties
+android/build/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Env and secrets
+.env
