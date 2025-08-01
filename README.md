@@ -13,6 +13,8 @@
 - 💧 Anzeige des Wasserstands in % (Sensor 4)  
 - 📊 Verlaufsgrafik der letzten 24 Stunden je Pflanze
 
+
+
 - 🌿 Real-time moisture display (up to 3 individual sensors)  
 - 💧 Water tank level display (Sensor 4)  
 - 📊 Historical moisture charts (last 24h per plant)
@@ -23,6 +25,8 @@
 - 🔁 Gießdauer: 1–60 Sekunden einstellbar  
 - 🔌 MQTT-Kommunikation mit dem ESP32  
 - ✅ Steuerung mehrerer Pumpen
+
+
 
 - 🚿 Manual watering (individual or all plants)  
 - ⏰ Scheduled automatic watering (customizable time)  
@@ -38,6 +42,8 @@
   - 🚿 Automatische Bewässerung gestartet  
 - 🟢 In-App-Warnungen mit Dialogfenster bei kritischen Zuständen
 
+
+
 - 🛎 Push notifications for:
   - ⚠️ Low soil moisture (20%, 10%, 0%)
   - 💧 Low water tank level (< 20%)
@@ -50,6 +56,8 @@
 - 🕓 Speichern und Wiederherstellen des Zeitplans  
 - 🧠 Verlaufshistorie der Sensorwerte (lokal gespeichert über 24h)  
 - ⚙️ Shared Preferences für alle Einstellungen
+
+
 
 - 💾 Last watering time per plant (saved across app restarts)  
 - 🕓 Schedule is stored and automatically reloaded  
@@ -183,7 +191,7 @@ Not licensed for commercial distribution.
 
 MIT License (if publicly released)
 
-<<<<<<< HEAD
+
 ## 📸 Screenshots 
 <img width="400" height="1000" alt="IMG_4682" src="https://github.com/user-attachments/assets/460ef836-3fb9-4dca-83be-395a780b4d14" />
 <img width="400" height="1000" alt="IMG_4683" src="https://github.com/user-attachments/assets/b514a90f-aee9-44bb-963c-2bf86748c1b2" />
@@ -194,7 +202,3 @@ MIT License (if publicly released)
 <img width="400" height="1000" alt="IMG_4688" src="https://github.com/user-attachments/assets/3366b3b7-4887-42b2-a7de-dbae9985bb32" />
 <img width="400" height="1000" alt="IMG_4689" src="https://github.com/user-attachments/assets/6f2cc7b8-083f-48f7-9ff5-9ee58e2481bc" />
 <img width="400" height="1000" alt="IMG_4690" src="https://github.com/user-attachments/assets/220fa469-c6a5-4f93-b863-943b71f87d89" />
-
-=======
-## 📸 Screenshots 
->>>>>>> gitlab/main
