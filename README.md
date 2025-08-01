@@ -13,7 +13,7 @@
 - 💧 Anzeige des Wasserstands in % (Sensor 4)  
 - 📊 Verlaufsgrafik der letzten 24 Stunden je Pflanze
 
-
+---
 
 - 🌿 Real-time moisture display (up to 3 individual sensors)  
 - 💧 Water tank level display (Sensor 4)  
@@ -26,7 +26,7 @@
 - 🔌 MQTT-Kommunikation mit dem ESP32  
 - ✅ Steuerung mehrerer Pumpen
 
-
+---
 
 - 🚿 Manual watering (individual or all plants)  
 - ⏰ Scheduled automatic watering (customizable time)  
@@ -42,7 +42,7 @@
   - 🚿 Automatische Bewässerung gestartet  
 - 🟢 In-App-Warnungen mit Dialogfenster bei kritischen Zuständen
 
-
+---
 
 - 🛎 Push notifications for:
   - ⚠️ Low soil moisture (20%, 10%, 0%)
@@ -57,7 +57,7 @@
 - 🧠 Verlaufshistorie der Sensorwerte (lokal gespeichert über 24h)  
 - ⚙️ Shared Preferences für alle Einstellungen
 
-
+---
 
 - 💾 Last watering time per plant (saved across app restarts)  
 - 🕓 Schedule is stored and automatically reloaded  
@@ -132,6 +132,7 @@ Falls Feuchtigkeit nicht korrekt erkannt wird:
 
   Lade die Firmware erneut hoch
 
+---
 
 Place the moisture sensors briefly in dry and wet soil for calibration
 
@@ -175,6 +176,8 @@ JSON-basiertes Datenmodell
 
 Dieses Projekt entstand im Rahmen des Fachprojekts (SoSe 2025) an der HTW Berlin und verfolgt das Ziel, ein günstiges, modulares und einfach bedienbares IoT-Bewässerungssystem zu entwickeln, das lokal und sicher arbeitet.
 
+---
+
 This project was developed as part of a student project (Summer Semester 2025) at HTW Berlin.
 It aims to provide a smart, affordable, and locally controlled irrigation system for small balcony gardens.
 
@@ -185,6 +188,7 @@ Nur für Studien- & Forschungszwecke freigegeben.
 
 MIT License (bei öffentlicher Veröffentlichung)
 
+---
 
 This project is intended for educational and research use only.
 Not licensed for commercial distribution.
