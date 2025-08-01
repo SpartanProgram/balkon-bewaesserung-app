@@ -144,9 +144,14 @@ class ZeitplanScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   "💧 Gießdauer wählen",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,),
                 ),
                 const SizedBox(height: 8),
                 Expanded(
@@ -181,11 +186,10 @@ class ZeitplanScreen extends StatelessWidget {
                           ),
                         ),
                         onPressed: () async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setInt('watering_duration_ms', selectedDuration * 1000);
+                          await context.read<SensorDataProvider>().updateWateringDuration(selectedDuration);
                           HapticFeedback.lightImpact();
                           Navigator.pop(context);
-                        },
+                        },                        
                         child: const Text("Fertig", style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
@@ -202,6 +206,7 @@ class ZeitplanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SensorDataProvider>();
+    final seconds = provider.wateringDurationSeconds;
 
     return CustomScaffold(
       title: 'Zeitplan',
@@ -273,7 +278,16 @@ class ZeitplanScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text("💧 Gießdauer", style: Theme.of(context).textTheme.titleMedium),
-                      Text("$seconds Sekunden", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(
+                        "$seconds Sekunden",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                      ),
                     ],
                   ),
                 ),

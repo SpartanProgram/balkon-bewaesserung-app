@@ -8,15 +8,6 @@ import '../services/sensor_name_service.dart';
 import 'package:bewaesserung_mobile_app/main.dart'; // or wherever your navigatorKey is defined
 
 
-Future<List<Map<String, dynamic>>> _loadHistory(int sensorIndex) async {
-  final prefs = await SharedPreferences.getInstance();
-  final rawJson = prefs.getString('sensor_${sensorIndex}_history');
-  if (rawJson == null) return [];
-
-  final List<dynamic> decoded = jsonDecode(rawJson);
-  return decoded.map((e) => Map<String, dynamic>.from(e)).toList();
-}
-
 class SensorDataProvider extends ChangeNotifier {
   final List<Map<String, String>> _sensorData = List.generate(3, (index) => {
         "sensor": "Sensor ${index + 1}",
@@ -444,6 +435,23 @@ class SensorDataProvider extends ChangeNotifier {
   }
 
   ThemeMode _themeMode = ThemeMode.light;
+
+  int _wateringDurationSeconds = 15;
+  int get wateringDurationSeconds => _wateringDurationSeconds;
+
+  Future<void> loadWateringDuration() async {
+    final prefs = await SharedPreferences.getInstance();
+    _wateringDurationSeconds = (prefs.getInt('watering_duration_ms') ?? 15000) ~/ 1000;
+    notifyListeners();
+  }
+
+  Future<void> updateWateringDuration(int seconds) async {
+    _wateringDurationSeconds = seconds;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('watering_duration_ms', seconds * 1000);
+    notifyListeners();
+  }
+
 
   ThemeMode get themeMode => _themeMode;
 

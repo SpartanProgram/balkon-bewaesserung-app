@@ -12,6 +12,7 @@ void main() async {
   await provider.loadHistoryFromPrefs();
   await provider.loadScheduleFromPrefs();
   await provider.loadAndConnectFromPrefs();
+  await provider.loadWateringDuration();
 
   runApp(
     ChangeNotifierProvider.value(
