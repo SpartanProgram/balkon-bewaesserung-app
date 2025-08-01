@@ -133,6 +133,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 Widget _buildWaterLevelStatus(String value) {
   int level = int.tryParse(value.replaceAll('%', '')) ?? 0;
 
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
   late IconData icon;
   late Color color;
   late String label;
@@ -155,11 +157,11 @@ Widget _buildWaterLevelStatus(String value) {
   }
 
   Widget card = Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    decoration: BoxDecoration(
-      color: color.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: color),
+     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+     decoration: BoxDecoration(
+     color: isDark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
+     borderRadius: BorderRadius.circular(20),
+     border: Border.all(color: color),
     ),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -266,31 +268,40 @@ Color _getMoistureColor(int moisture) {
   if (moisture < 60) return Colors.orange;
   return Colors.green;
 }
-
+  
   Widget _animatedWateringCard(String lastWateredText) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.shade50,
+        color: isDark ? Colors.grey.shade800 : Colors.green.shade50,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          const Icon(Icons.history, color: Colors.green, size: 36),
+          Icon(Icons.history, color: isDark ? Colors.greenAccent : Colors.green, size: 36),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "Letzte Bewässerung",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   lastWateredText,
-                  style: const TextStyle(fontSize: 16),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white70 : Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -299,7 +310,6 @@ Color _getMoistureColor(int moisture) {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final sensorData = context.watch<SensorDataProvider>().sensorData;
@@ -426,8 +436,12 @@ Color _getMoistureColor(int moisture) {
                                 builder: (context, setState) {
                                   return ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: isWatering ? Colors.grey : const Color.fromARGB(255, 207, 207, 207),
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                    backgroundColor: isWatering
+                                        ? Colors.grey
+                                        : isDark
+                                            ? Colors.grey[800]
+                                            : Colors.grey[300],                                      
+                                            padding: const EdgeInsets.symmetric(vertical: 16),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                     ),
                                       onPressed: () async {
@@ -457,10 +471,14 @@ Color _getMoistureColor(int moisture) {
                                                 Text("Wird bewässert..."),
                                               ],
                                             )
-                                          : const Text(
-                                              "Bewässern",
-                                              key: ValueKey(2),
-                                            ),
+                                          : Text(
+                                          "Bewässern",
+                                          key: ValueKey(2),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: isDark ? Colors.white : Colors.black,
+                                          ),
+                                      )
                                     ),
                                   );
                                 },
