@@ -156,16 +156,15 @@ class ZeitplanScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Expanded(
                   child: CupertinoPicker(
-                    scrollController: FixedExtentScrollController(initialItem: (initialDurationSeconds - 5)),
-                    itemExtent: 40,
-                    useMagnifier: true,
-                    looping: false,
-                    onSelectedItemChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      selectedDuration = value + 5;
-                    },
-                    children: List.generate(56, (i) => Center(child: Text("${i + 5} Sekunden"))),
-                  ),
+                scrollController: FixedExtentScrollController(initialItem: (initialDurationSeconds - 1).clamp(0, 59)),
+                itemExtent: 40,
+                useMagnifier: true,
+                looping: false,
+                onSelectedItemChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  selectedDuration = value + 1;
+                },
+                children: List.generate(60, (i) => Center(child: Text("${i + 1} Sekunden"))),                  ),
                 ),
                 const Divider(height: 1),
                 Padding(
