@@ -28,8 +28,8 @@ generated_plugin_registrant.dart
 ios/Flutter/
 ios/Pods/
 ios/.symlinks/
-ios/Runner.xcworkspace/*
-ios/Runner.xcodeproj/*
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
 ios/Flutter.podspec
 ios/Flutter/Generated.xcconfig
 macos/Flutter/
@@ -38,9 +38,7 @@ macos/.symlinks/
 macos/Runner.xcworkspace/
 macos/Runner.xcodeproj/xcuserdata/
 macos/Runner.xcodeproj/project.xcworkspace/
-macos/Runner.xcworkspace/xcuserdata/
-
-# Xcode
+macos/Runner.xworkspace/
 *.xcuserstate
 *.xcworkspace
 *.xcodeproj/project.xcworkspace/
@@ -67,4 +65,19 @@ Thumbs.db
 # Environment
 .env
 
-Bewässerung_App/
+# Large or sensitive files (custom)
+*.apk
+*.ipa
+*.zip
+*.tar.gz
+*.dmg
+
+# Manually added large directories and files
+Software/build/
+Software/Bewässerung_App/
+Software/flutter_Bewässerung_app.zip
+
+# Ignore build artifacts
+Software/build/
+*.apk
+*.framework

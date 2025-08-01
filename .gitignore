@@ -1,22 +1,6 @@
-<<<<<<< HEAD
-# System files
-.DS_Store
-Thumbs.db
-
-# Build outputs & binaries
-*.apk
-*.ipa
-*.dmg
-*.zip
-*.tar.gz
-*.log
-*.tmp
-*.bak
-
 # Flutter & Dart
 .dart_tool/
 .packages
-.flutter-*
 .pub-cache/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -24,40 +8,11 @@ Thumbs.db
 .melos_tool/
 .metadata
 
-# Build folders
+# Build outputs
 build/
 **/build/
-# Software/build/
-
-# iOS & macOS
-ios/Flutter/
-ios/Pods/
-ios/.symlinks/
-ios/Runner.xcworkspace/
-ios/Runner.xcodeproj/xcuserdata/
-ios/Flutter/Generated.xcconfig
-ios/Flutter.podspec
-
-macos/Flutter/
-macos/Pods/
-macos/.symlinks/
-macos/Runner.xcworkspace/
-macos/Runner.xcodeproj/xcuserdata/
-macos/Runner.xcodeproj/project.xcworkspace/
-macos/Runner.xcworkspace/xcuserdata/
-
-*.xcuserstate
-*.xcworkspace
-*.xcodeproj/xcuserdata/
-*.xcodeproj/project.xcworkspace/
-
-# Android
-android/.gradle/
-android/.idea/
-android/.settings/
-android/local.properties
-android/key.properties
-android/build/
+generated_plugin_registrant.dart
+.flutter-*
 
 # VS Code
 .vscode/
@@ -69,8 +24,60 @@ android/build/
 *.ipr
 *.iws
 
-# Env and secrets
+# iOS & macOS
+ios/Flutter/
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+macos/Flutter/
+macos/Pods/
+macos/.symlinks/
+macos/Runner.xcworkspace/
+macos/Runner.xcodeproj/xcuserdata/
+macos/Runner.xcodeproj/project.xcworkspace/
+macos/Runner.xworkspace/
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/*.pbxuser
+
+# Android
+android/.gradle/
+android/.idea/
+android/.settings/
+android/local.properties
+android/key.properties
+android/build/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Logs, backups
+*.log
+*.tmp
+*.bak
+
+# Environment
 .env
-=======
-.vscode/
->>>>>>> gitlab/main
+
+# Large or sensitive files (custom)
+*.apk
+*.ipa
+*.zip
+*.tar.gz
+*.dmg
+
+# Manually added large directories and files
+Software/build/
+Software/Bewässerung_App/
+Software/flutter_Bewässerung_app.zip
+
+# Ignore build artifacts
+Software/build/
+*.apk
+*.framework
