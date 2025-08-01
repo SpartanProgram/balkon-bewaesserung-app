@@ -89,13 +89,14 @@ class SensorDataProvider extends ChangeNotifier {
             : 'Manuelle Bewässerung Sensor ${sensorId + 1}',
       });
     } else {
-      final prefs = await SharedPreferences.getInstance();
-      final wateredTime = _formattedNow();
+       final prefs = await SharedPreferences.getInstance();
+       final wateredTime = _formattedNow();
       
-      for (int i = 0; i < 3; i++) {
-        _sensorData[i]["lastWatered"] = wateredTime;
-      await prefs.setString('sensor_${i}_lastWatered', wateredTime);
-        }
+       for (int i = 0; i < 3; i++) {
+          _sensorData[i]["lastWatered"] = wateredTime;
+          await prefs.setString('sensor_${i}_lastWatered', wateredTime);
+          pumpStates[i] = true;
+          }
 
       _history.add({
         'timestamp': DateTime.now(),
@@ -149,7 +150,7 @@ class SensorDataProvider extends ChangeNotifier {
           for (final threshold in thresholds) {
             if (moisture <= threshold && _lastAlertLevel[i] > threshold) {
               final prefs = await SharedPreferences.getInstance();
-              final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+              final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
               final name = await SensorNameService.getName(i, fallback: 'Sensor');
 
               String levelLabel;
@@ -282,26 +283,62 @@ class SensorDataProvider extends ChangeNotifier {
           _sensorData[i]["waterLevel"] = waterLevelStr;
         }
 
-        if (_hasInitializedWaterLevel && _previousWaterLevel != null && _previousWaterLevel! > 20 && waterLevel <= 20) {
-          _history.add({
-            'timestamp': now,
-            'type': 'sensor',
-            'sensorId': -1,
-            'event': 'Wasserstand niedrig: $waterLevel%',
-          });
+if (_hasInitializedWaterLevel && _previousWaterLevel != null) {
+  final prefs = await SharedPreferences.getInstance();
+  final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
 
-          final prefs = await SharedPreferences.getInstance();
-          final notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+  if (_previousWaterLevel! > 20 && waterLevel <= 20) {
+    _history.add({
+      'timestamp': now,
+      'type': 'sensor',
+      'sensorId': -1,
+      'event': 'Wasserstand niedrig: $waterLevel%',
+    });
 
-          if (notificationsEnabled) {
-            await NotificationService.show(
-              title: '💧 Niedriger Wasserstand',
-              body: 'Wasserstand: $waterLevel%',
-              playWarningSound: true,
-            );
-          }
-        }
+    if (notificationsEnabled) {
+      await NotificationService.show(
+        title: '💧 Niedriger Wasserstand',
+        body: 'Wasserstand: $waterLevel%',
+        playWarningSound: true,
+      );
+    }
+  }
 
+    if (_previousWaterLevel! > 0 && waterLevel == 0) {
+      _history.add({
+        'timestamp': now,
+        'type': 'sensor',
+        'sensorId': -1,
+        'event': 'Wasser komplett leer!',
+      });
+
+      if (notificationsEnabled) {
+        await NotificationService.show(
+          title: '🚱 Kein Wasser mehr!',
+          body: 'Der Wassertank ist komplett leer.',
+          playWarningSound: true,
+        );
+      }
+
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('🚱 Kein Wasser mehr!'),
+            content: const Text('Der Wassertank ist komplett leer. Bitte nachfüllen.'),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
         _previousWaterLevel = waterLevel;
         _hasInitializedWaterLevel = true;
       }
