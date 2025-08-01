@@ -184,3 +184,6 @@ Not licensed for commercial distribution.
 MIT License (if publicly released)
 
 ## 📸 Screenshots 
+<img width="1290" height="2796" alt="IMG_4682" src="https://github.com/user-attachments/assets/460ef836-3fb9-4dca-83be-395a780b4d14" />
+<img width="1290" height="2796" alt="IMG_4683" src="https://github.com/user-attachments/assets/caa950cf-30ef-47cf-91c1-7171e750548c" />
+
