@@ -8,7 +8,14 @@ import '../services/sensor_name_service.dart';
 import 'package:bewaesserung_mobile_app/main.dart'; // or wherever your navigatorKey is defined
 
 
+Future<List<Map<String, dynamic>>> _loadHistory(int sensorIndex) async {
+  final prefs = await SharedPreferences.getInstance();
+  final rawJson = prefs.getString('sensor_${sensorIndex}_history');
+  if (rawJson == null) return [];
 
+  final List<dynamic> decoded = jsonDecode(rawJson);
+  return decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+}
 
 class SensorDataProvider extends ChangeNotifier {
   final List<Map<String, String>> _sensorData = List.generate(3, (index) => {
@@ -264,6 +271,9 @@ class SensorDataProvider extends ChangeNotifier {
           }).toList();
 
           _sensorData[i]["history"] = jsonEncode(history);
+
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('sensor_${i}_history', jsonEncode(history));
         }
       }
 
@@ -443,5 +453,30 @@ class SensorDataProvider extends ChangeNotifier {
     await prefs.setInt('theme_mode', mode.index);
     notifyListeners();
   }
+
+  Future<List<Map<String, dynamic>>> _loadSensorHistory(int index) async {
+  final prefs = await SharedPreferences.getInstance();
+  final jsonStr = prefs.getString('sensor_${index}_history');
+  if (jsonStr == null) return [];
+
+  final List<dynamic> list = jsonDecode(jsonStr);
+  final now = DateTime.now();
+
+  return list
+      .map((e) => Map<String, dynamic>.from(e))
+      .where((entry) {
+        final ts = DateTime.tryParse(entry["timestamp"] ?? "");
+        return ts != null && now.difference(ts).inHours < 24;
+      })
+      .toList();
+}
+
+  Future<void> loadAllSensorHistories() async {
+  for (int i = 0; i < _sensorData.length; i++) {
+    final history = await _loadSensorHistory(i);
+    _sensorData[i]["history"] = jsonEncode(history);
+  }
+  notifyListeners();
+}
   
 }

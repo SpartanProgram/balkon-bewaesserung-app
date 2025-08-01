@@ -46,23 +46,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addObserver(this);
 
-    final provider = context.read<SensorDataProvider>();
+  final provider = context.read<SensorDataProvider>();
+  provider.loadAllSensorHistories(); // <-- Add this line
 
-    // ✅ Listen to watering end to close dialog
-    provider.wateringEnded.addListener(() {
-      if (provider.wateringEnded.value && mounted) {
-        if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
-        provider.wateringEnded.value = false;
-      }
-    });
-
-  }
-
+  provider.wateringEnded.addListener(() {
+    if (provider.wateringEnded.value && mounted) {
+      if (Navigator.canPop(context)) Navigator.of(context, rootNavigator: true).pop();
+      provider.wateringEnded.value = false;
+    }
+  });
+}
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -247,9 +245,10 @@ Widget _buildMoistureCard(int moisture) {
                     child: Text(
                       "$moisture%",
                       key: ValueKey(moisture),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -413,19 +412,10 @@ Color _getMoistureColor(int moisture) {
                               _animatedWateringCard(sensor["lastWatered"]!),
                               Builder(
                                 builder: (_) {
-                                  final raw = sensor["history"];
-                                  final now = DateTime.now();
-
-                                  final List<Map<String, dynamic>> history = (raw != null)
-                                      ? (jsonDecode(raw) as List)
-                                          .map((entry) => Map<String, dynamic>.from(entry))
-                                          .where((entry) {
-                                            final timestamp = DateTime.tryParse(entry["timestamp"] ?? "");
-                                            return timestamp != null && now.difference(timestamp).inHours < 24;
-                                          })
-                                          .toList()
-                                      : [];
-
+                                final raw = sensor["history"];
+                                final List<Map<String, dynamic>> history = (raw != null)
+                                    ? (jsonDecode(raw) as List).map((entry) => Map<String, dynamic>.from(entry)).toList()
+                                    : [];                                  
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 20, bottom: 32),
                                     child: MoistureChart(rawData: history),
