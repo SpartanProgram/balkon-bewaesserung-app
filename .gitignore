@@ -26,7 +26,7 @@ Thumbs.db
 # Build folders
 build/
 **/build/
-Software/build/
+# Software/build/
 
 # iOS & macOS
 ios/Flutter/
