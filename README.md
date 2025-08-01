@@ -184,13 +184,13 @@ Not licensed for commercial distribution.
 MIT License (if publicly released)
 
 ## 📸 Screenshots 
-<img width="600" height="1300" alt="IMG_4682" src="https://github.com/user-attachments/assets/460ef836-3fb9-4dca-83be-395a780b4d14" />
-<im<img width="600" height="1300" alt="IMG_4684" src="https://github.com/user-attachments/assets/1d064956-c802-4c7f-aaca-fbb7747a44c2" />
-<img width="600" height="1300" alt="IMG_4685" src="https://github.com/user-attachments/assets/64ef9fce-48ea-4e08-a80c-c4762faec761" />
-<img width="600" height="1300" alt="IMG_4686" src="https://github.com/user-attachments/assets/2c9d8b2e-53d6-40db-8594-b6ca62621ed5" />
-<img width="600" height="1300" alt="IMG_4687" src="https://github.com/user-attachments/assets/0951df65-1afe-429d-9a83-a8d3d1c6d938" />
-<img width="600" height="1300" alt="IMG_4688" src="https://github.com/user-attachments/assets/3366b3b7-4887-42b2-a7de-dbae9985bb32" />
-<img width="600" height="1300" alt="IMG_4689" src="https://github.com/user-attachments/assets/6f2cc7b8-083f-48f7-9ff5-9ee58e2481bc" />
-<img width="600" height="1300" alt="IMG_4690" src="https://github.com/user-attachments/assets/220fa469-c6a5-4f93-b863-943b71f87d89" />
-<img width="600" height="1300" alt="IMG_4683" src="https://github.com/user-attachments/assets/caa950cf-30ef-47cf-91c1-7171e750548c" />
+<img width="400" height="1000" alt="IMG_4682" src="https://github.com/user-attachments/assets/460ef836-3fb9-4dca-83be-395a780b4d14" />
+<im<img width="400" height="1000" alt="IMG_4684" src="https://github.com/user-attachments/assets/1d064956-c802-4c7f-aaca-fbb7747a44c2" />
+<img width="400" height="1000" alt="IMG_4685" src="https://github.com/user-attachments/assets/64ef9fce-48ea-4e08-a80c-c4762faec761" />
+<img width="400" height="1000" alt="IMG_4686" src="https://github.com/user-attachments/assets/2c9d8b2e-53d6-40db-8594-b6ca62621ed5" />
+<img width="400" height="1000" alt="IMG_4687" src="https://github.com/user-attachments/assets/0951df65-1afe-429d-9a83-a8d3d1c6d938" />
+<img width="400" height="1000" alt="IMG_4688" src="https://github.com/user-attachments/assets/3366b3b7-4887-42b2-a7de-dbae9985bb32" />
+<img width="400" height="1000" alt="IMG_4689" src="https://github.com/user-attachments/assets/6f2cc7b8-083f-48f7-9ff5-9ee58e2481bc" />
+<img width="400" height="1000" alt="IMG_4690" src="https://github.com/user-attachments/assets/220fa469-c6a5-4f93-b863-943b71f87d89" />
+<img width="400" height="1000" alt="IMG_4683" src="https://github.com/user-attachments/assets/caa950cf-30ef-47cf-91c1-7171e750548c" />
 
