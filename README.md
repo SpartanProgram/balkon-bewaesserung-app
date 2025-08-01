@@ -1,91 +1,186 @@
-# 🌱 Balkon Bewässerung – Mobile App
+# 🌱 Balkon Bewässerung / Balcony Irrigation – Mobile App
 
-Dies ist eine Flutter-App zur Überwachung und Steuerung eines automatisierten Bewässerungssystems für den Balkon. Die App kommuniziert über MQTT mit einem ESP32-basierten Microcontroller und unterstützt sowohl manuelle als auch automatische Bewässerung per Zeitplan.
+*Automatisiertes Pflanzenbewässerungssystem mit Flutter, MQTT & ESP32*  
 
----
-
-## 📱 Funktionen
-
-- Anzeige von Bodenfeuchtigkeit (bis zu 3 Sensoren)
-- Anzeige des Wasserstands
-- Manuelle Bewässerung einzelner oder aller Sensoren
-- Automatische Bewässerung nach Zeitplan
-- Verlauf (Verlaufsanzeige von Bewässerungs- und Sensordaten)
-- Push-Benachrichtigungen:
-  - 🚿 Automatische Bewässerung
-  - 🌱 Niedrige Bodenfeuchtigkeit
-  - 💧 Niedriger Wasserstand
-- Verbindung zu MQTT-Broker mit TLS-Unterstützung
-- Speicherung der Einstellungen lokal (Shared Preferences)
-- Unterstützung für Android und iOS
+*A smart IoT plant watering system using Flutter, MQTT & ESP32*
 
 ---
 
-## 🚀 Installation & Ausführung
+## 📱 Funktionen / Features
 
-### Voraussetzungen
-- Flutter SDK installiert
-- Ein MQTT-Broker (z. B. HiveMQ, Mosquitto)
-- ESP32 mit passender Firmware zur Datenübertragung via MQTT
+### ✅ Echtzeitdaten / Live Monitoring  
+- 🌿 Feuchtigkeitsanzeige (bis zu 3 Sensoren, einzeln dargestellt)  
+- 💧 Anzeige des Wasserstands in % (Sensor 4)  
+- 📊 Verlaufsgrafik der letzten 24 Stunden je Pflanze
 
-### App ausführen
+- 🌿 Real-time moisture display (up to 3 individual sensors)  
+- 💧 Water tank level display (Sensor 4)  
+- 📊 Historical moisture charts (last 24h per plant)
+
+### ✅ Steuerung / Smart Controls 
+- 🚿 Manuelle Bewässerung (einzeln oder alle Pflanzen auf Knopfdruck)  
+- ⏰ Zeitplan: automatische Bewässerung zu bestimmter Uhrzeit  
+- 🔁 Gießdauer: 1–60 Sekunden einstellbar  
+- 🔌 MQTT-Kommunikation mit dem ESP32  
+- ✅ Steuerung mehrerer Pumpen
+
+- 🚿 Manual watering (individual or all plants)  
+- ⏰ Scheduled automatic watering (customizable time)  
+- 🔁 Adjustable watering duration (1–60 seconds)  
+- 🔌 MQTT communication with ESP32 microcontroller  
+- ✅ Multiple pump control with per-plant logic
+
+### ✅ Benachrichtigungen / Notifications  
+- 🛎 Push-Benachrichtigungen bei:
+  - ⚠️ Niedriger Feuchtigkeitswert (20%, 10%, 0%)  
+  - 💧 Niedriger Wasserstand (< 20%)  
+  - 🚱 Kein Wasser mehr (0%)  
+  - 🚿 Automatische Bewässerung gestartet  
+- 🟢 In-App-Warnungen mit Dialogfenster bei kritischen Zuständen
+
+- 🛎 Push notifications for:
+  - ⚠️ Low soil moisture (20%, 10%, 0%)
+  - 💧 Low water tank level (< 20%)
+  - 🚱 Water tank empty (0%)
+  - 🚿 Automatic watering triggered  
+- 🟢 In-app alert dialogs when thresholds are reached
+
+### ✅ Speicherfunktionen / Persistence 
+- 💾 Speicherung von „Letzte Bewässerung“ (bleibt auch nach App-Neustart erhalten)  
+- 🕓 Speichern und Wiederherstellen des Zeitplans  
+- 🧠 Verlaufshistorie der Sensorwerte (lokal gespeichert über 24h)  
+- ⚙️ Shared Preferences für alle Einstellungen
+
+- 💾 Last watering time per plant (saved across app restarts)  
+- 🕓 Schedule is stored and automatically reloaded  
+- 🧠 Sensor history (local 24h storage)  
+- ⚙️ Uses Shared Preferences for all user settings
+
+---
+
+### Voraussetzungen / Requirements
+
+- ✅ Flutter SDK (3.x)  
+- ✅ Ein MQTT-Broker (z. B. Mosquitto, HiveMQ)  
+- ✅ ESP32 mit Firmware zur MQTT-Kommunikation  
+- 📱 iOS & Android-Unterstützung  
+
+## 🚀 Installation & Ausführen / Getting Started
+
+### 1. Projekt klonen / Clone the project
 
 ```bash
+git clone https://github.com/your-username/bewaesserung-mobile-app.git
+cd bewaesserung-mobile-app
 flutter pub get
+```
+
+### 2. App starten / Run the app
+
+```bash
 flutter run
 ```
-## ⚙️ ESP Setup
 
-Beim ersten Einschalten alle sensoren in trockene Erde (0) und auch in feuchte/nass Erde für 20 Sekunde stecken
-Wenn Sensoren das Prozent nicht richtig anzeigen >>> bitte Esp Preferences resetten(reset.txt) und dann main nochmal hochladen.
+Hinweis: MQTT-Verbindung muss über die App-Einstellungen eingerichtet werden.
 
-## ⚙️ MQTT Setup
+## ⚙️  MQTT Kommunikation / MQTT Integration
 
-Topic (Empfang): pflanzen/pflanze01
+### 📥 Empfang /  Incoming Data (ESP → App)
+Topic: pflanzen/pflanze01
 
-Topic (Senden): pflanzen/pflanze01/control
-
-Payload Beispiel (ESP → App):
 ```bash
 {
   "sensor1": 55,
   "sensor2": 43,
   "sensor3": 87,
-  "sensor4": 100
-}
-```
-Payload Beispiel (App → ESP):
-```bash
-{
-  "pump": [true, false, true]
+  "sensor4": 18,
+  "pump": [false, false, false]
 }
 ```
 
-## 🔐 Berechtigungen
+### 📤 Steuerung / Outgoing Control (App → ESP)
+Topic: pflanzen/pflanze01/control
+
+```bash
+{
+  "pump": [true, false, true],
+  "duration": 15000
+}
+```
+
+pump: Liste mit 3 Booleans für jede Pflanze / List of 3 booleans (one per plant)
+
+duration: Dauer in Millisekunden (z. B. 15000 = 15 Sekunden) / Watering duration in milliseconds (e.g., 15000 = 15 seconds)
+
+## 🧪 ESP Setup
+
+Beim ersten Start: / On first setup:
+
+Stecke die Sensoren kurz in trockene und feuchte Erde (für Kalibrierung)
+
+Falls Feuchtigkeit nicht korrekt erkannt wird:
+
+  Erstelle eine reset.txt auf dem ESP
+
+  Lade die Firmware erneut hoch
+
+
+Place the moisture sensors briefly in dry and wet soil for calibration
+
+If readings appear inaccurate:
+
+Create a reset.txt file on the ESP
+
+Upload the firmware again to trigger sensor reset
+
+## 🔐 Berechtigungen / Permissions
 
 POST_NOTIFICATIONS (Android)
 
 Lokale Benachrichtigungen (iOS & Android)
 
-## 🛠 Verwendete Technologien
+## 🛠 Verwendete Technologien / Tech Stack
 
 Flutter
 
-Provider
-
-flutter_local_notifications
-
-shared_preferences
+Provider (State Management)
 
 mqtt_client
 
+shared_preferences
+
+flutter_local_notifications
+
+Cupertino Widgets (iOS-Style Picker)
+
+JSON-basiertes Datenmodell
+
 ## 👥 Team
 
-- Zul Fahmi Nur Vagala (Software)
-- Dzaid Abiyyu Siregar (ESP32)
-- Johannes Berg (Konstruktion)
+👨‍💻 Zul Fahmi Nur Vagala – App-Entwicklung / Mobile App (Flutter)
+
+🔌 Dzaid Abiyyu Siregar – ESP32-Entwicklung / ESP32 Firmware(Firmware)
+
+🛠 Johannes Berg – Mechanik & Hardware / Mechanical Design & Hardware Integration
+
+## 🧠 Projektziel / Project Scope
+
+Dieses Projekt entstand im Rahmen des Fachprojekts (SoSe 2025) an der HTW Berlin und verfolgt das Ziel, ein günstiges, modulares und einfach bedienbares IoT-Bewässerungssystem zu entwickeln, das lokal und sicher arbeitet.
+
+This project was developed as part of a student project (Summer Semester 2025) at HTW Berlin.
+It aims to provide a smart, affordable, and locally controlled irrigation system for small balcony gardens.
+
+## 📝 Lizenz / License
+
+Dieses Projekt ist Teil des Fachprojekts an der HTW Berlin.
+Nur für Studien- & Forschungszwecke freigegeben.
+
+MIT License (bei öffentlicher Veröffentlichung)
 
 
-## 📝 Lizenz
+This project is intended for educational and research use only.
+Not licensed for commercial distribution.
 
-Dieses Projekt ist Teil des Fachprojekts an der HTW Berlin (SoSe 2025). Die Nutzung ist nur zu Studienzwecken gestattet.
+MIT License (if publicly released)
+
+## 📸 Screenshots 
