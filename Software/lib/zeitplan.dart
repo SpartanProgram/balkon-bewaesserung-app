@@ -206,8 +206,6 @@ class ZeitplanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SensorDataProvider>();
-    final seconds = provider.wateringDurationSeconds;
-
     return CustomScaffold(
       title: 'Zeitplan',
       body: Column(

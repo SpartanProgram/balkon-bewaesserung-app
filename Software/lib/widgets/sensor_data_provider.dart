@@ -74,11 +74,13 @@ class SensorDataProvider extends ChangeNotifier {
 
     List<bool> pumpStates = List.filled(3, false);
 
-    if (sensorId != null) {
-      pumpStates[sensorId] = true;
-      _sensorData[sensorId]["lastWatered"] = _formattedNow();
+      if (sensorId != null) {
+        pumpStates[sensorId] = true;
+        final wateredTime = _formattedNow();
+        _sensorData[sensorId]["lastWatered"] = wateredTime;
 
-      _history.add({
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('sensor_${sensorId}_lastWatered', wateredTime);      _history.add({
         'timestamp': DateTime.now(),
         'type': 'watering',
         'sensorId': sensorId,
@@ -87,10 +89,13 @@ class SensorDataProvider extends ChangeNotifier {
             : 'Manuelle Bewässerung Sensor ${sensorId + 1}',
       });
     } else {
-      pumpStates = List.filled(3, true);
+      final prefs = await SharedPreferences.getInstance();
+      final wateredTime = _formattedNow();
+      
       for (int i = 0; i < 3; i++) {
-        _sensorData[i]["lastWatered"] = _formattedNow();
-      }
+        _sensorData[i]["lastWatered"] = wateredTime;
+      await prefs.setString('sensor_${i}_lastWatered', wateredTime);
+        }
 
       _history.add({
         'timestamp': DateTime.now(),
@@ -479,12 +484,21 @@ class SensorDataProvider extends ChangeNotifier {
       .toList();
 }
 
-  Future<void> loadAllSensorHistories() async {
-  for (int i = 0; i < _sensorData.length; i++) {
-    final history = await _loadSensorHistory(i);
-    _sensorData[i]["history"] = jsonEncode(history);
+    Future<void> loadAllSensorHistories() async {
+    for (int i = 0; i < _sensorData.length; i++) {
+      final history = await _loadSensorHistory(i);
+      _sensorData[i]["history"] = jsonEncode(history);
+    }
+    notifyListeners();
   }
-  notifyListeners();
-}
+
+  Future<void> loadLastWateredTimes() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (int i = 0; i < _sensorData.length; i++) {
+      final time = prefs.getString('sensor_${i}_lastWatered') ?? "--";
+      _sensorData[i]["lastWatered"] = time;
+    }
+    notifyListeners();
+  }
   
 }

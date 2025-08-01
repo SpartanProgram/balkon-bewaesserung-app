@@ -52,7 +52,8 @@ void initState() {
   WidgetsBinding.instance.addObserver(this);
 
   final provider = context.read<SensorDataProvider>();
-  provider.loadAllSensorHistories(); // <-- Add this line
+  provider.loadAllSensorHistories(); 
+  provider.loadLastWateredTimes();
 
   provider.wateringEnded.addListener(() {
     if (provider.wateringEnded.value && mounted) {
@@ -424,56 +425,57 @@ Color _getMoistureColor(int moisture) {
                               ),
                               StatefulBuilder(
                                 builder: (context, setState) {
-                                  return ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                    backgroundColor: isWatering
-                                        ? Colors.grey
-                                        : isDark
-                                            ? Colors.grey[800]
-                                            : Colors.grey[300],                                      
-                                            padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                    ),
+                                  return SizedBox(
+                                    width: 120,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: isWatering
+                                            ? Colors.grey
+                                            : isDark
+                                                ? Colors.grey[800]
+                                                : Colors.grey[300],
+                                        padding: const EdgeInsets.symmetric(vertical: 16),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      ),
                                       onPressed: () async {
-                                              HapticFeedback.mediumImpact();
-                                              // 🔊 Play watering sound
-                                              await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
-                                              _showWateringDialog("$sensorName wird gerade bewässert 💧", isGlobal: false);
-                                              // Show dialog
-                                              setState(() => isWatering = false);
-                                            },
-                                    child: AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 300),
-                                      child: isWatering
-                                          ? Row(
-                                              key: const ValueKey(1),
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: const [
-                                                SizedBox(
-                                                  width: 20,
-                                                  height: 20,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    color: Colors.white,
+                                        HapticFeedback.mediumImpact();
+                                        await context.read<SensorDataProvider>().triggerWatering(sensorId: index);
+                                        _showWateringDialog("$sensorName wird gerade bewässert 💧", isGlobal: false);
+                                        setState(() => isWatering = false);
+                                      },
+                                      child: AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 300),
+                                        child: isWatering
+                                            ? Row(
+                                                key: const ValueKey(1),
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: const [
+                                                  SizedBox(
+                                                    width: 20,
+                                                    height: 20,
+                                                    child: CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Colors.white,
+                                                    ),
                                                   ),
+                                                  SizedBox(width: 10),
+                                                  Text("Wird bewässert..."),
+                                                ],
+                                              )
+                                            : Text(
+                                                "Bewässern",
+                                                key: const ValueKey(2),
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: isDark ? Colors.white : Colors.black,
                                                 ),
-                                                SizedBox(width: 10),
-                                                Text("Wird bewässert..."),
-                                              ],
-                                            )
-                                          : Text(
-                                          "Bewässern",
-                                          key: ValueKey(2),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: isDark ? Colors.white : Colors.black,
-                                          ),
-                                      )
+                                              ),
+                                      ),
                                     ),
                                   );
                                 },
-                              ),
-                              const SizedBox(height: 12),
+                              ),                              
+                            const SizedBox(height: 12),
                           ],
                         ),
                         ),

@@ -13,6 +13,7 @@ void main() async {
   await provider.loadScheduleFromPrefs();
   await provider.loadAndConnectFromPrefs();
   await provider.loadWateringDuration();
+  await provider.loadLastWateredTimes();
 
   runApp(
     ChangeNotifierProvider.value(
