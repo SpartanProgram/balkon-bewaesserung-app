@@ -185,6 +185,7 @@ MIT License (if publicly released)
 
 ## 📸 Screenshots 
 <img width="400" height="1000" alt="IMG_4682" src="https://github.com/user-attachments/assets/460ef836-3fb9-4dca-83be-395a780b4d14" />
+<img width="400" height="1000" alt="IMG_4683" src="https://github.com/user-attachments/assets/b514a90f-aee9-44bb-963c-2bf86748c1b2" />
 <img width="400" height="1000" alt="IMG_4684" src="https://github.com/user-attachments/assets/1d064956-c802-4c7f-aaca-fbb7747a44c2" />
 <img width="400" height="1000" alt="IMG_4685" src="https://github.com/user-attachments/assets/64ef9fce-48ea-4e08-a80c-c4762faec761" />
 <img width="400" height="1000" alt="IMG_4686" src="https://github.com/user-attachments/assets/2c9d8b2e-53d6-40db-8594-b6ca62621ed5" />
