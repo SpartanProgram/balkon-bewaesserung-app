@@ -183,6 +183,7 @@ Not licensed for commercial distribution.
 
 MIT License (if publicly released)
 
+<<<<<<< HEAD
 ## 📸 Screenshots 
 <img width="400" height="1000" alt="IMG_4682" src="https://github.com/user-attachments/assets/460ef836-3fb9-4dca-83be-395a780b4d14" />
 <img width="400" height="1000" alt="IMG_4683" src="https://github.com/user-attachments/assets/b514a90f-aee9-44bb-963c-2bf86748c1b2" />
@@ -194,3 +195,6 @@ MIT License (if publicly released)
 <img width="400" height="1000" alt="IMG_4689" src="https://github.com/user-attachments/assets/6f2cc7b8-083f-48f7-9ff5-9ee58e2481bc" />
 <img width="400" height="1000" alt="IMG_4690" src="https://github.com/user-attachments/assets/220fa469-c6a5-4f93-b863-943b71f87d89" />
 
+=======
+## 📸 Screenshots 
+>>>>>>> gitlab/main

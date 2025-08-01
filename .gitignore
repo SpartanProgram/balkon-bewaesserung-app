@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # System files
 .DS_Store
 Thumbs.db
@@ -70,3 +71,6 @@ android/build/
 
 # Env and secrets
 .env
+=======
+.vscode/
+>>>>>>> gitlab/main
